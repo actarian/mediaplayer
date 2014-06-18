@@ -1,0 +1,206 @@
+@import url('http://i.icomoon.io/public/temp/5e51e7d4d3/mediaplayer/style.css') screen;
+/********************************
+M E D I A P L A Y E R
+********************************/
+
+@import "mediaplayer.variables.less";
+@import "mediaplayer.mixins.less";
+
+.mediaplayer video, 
+.mediaplayer, 
+.mediaplayer & > .overlay, 
+.mediaplayer & > .overlay & > .poster, 
+.mediaplayer & > .youtubeplayer, 
+.mediaplayer & > .html5player {
+    position: relative;
+    display: block;
+    width: 100%;
+}
+
+.mediaplayer {
+    position: relative;
+    display: block;
+    margin: 0;
+    margin-bottom: 200px;
+    padding: 0;
+    min-height: 100px;
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+    background: red;
+    opacity: 0;
+    cursor: pointer;
+    overflow: hidden;
+	.useHardware();	
+    > .overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,.2);
+        text-align: center;
+        opacity: 1;
+        .setTransition(opacity);
+    }
+    .controls {
+    	display: table;
+    	position: absolute;
+    	width: 100%;
+    	height: 47px;
+    	bottom: 0;
+    	background: @back;
+    	color: @fore;
+    	> div {
+    		display: table-cell;
+    		padding: 0 8px;
+    		vertical-align: middle;
+			text-align: center;
+    		border-right: 1px solid rgba(0,0,0,0.2); 	
+    		
+    		-webkit-font-smoothing: antialiased;
+			-moz-osx-font-smoothing: grayscale;
+    	}
+    	.playpause {
+    		font-family: 'mediaplayer';
+    		content: '\e600'
+    	}
+    	.timeline {
+    		position: relative;
+    		width: 99%;
+    		padding: 0 12px;
+    		margin: 0 20px;
+    		.track {
+    			position: relative;
+    			width: 100%;
+    			height: 12px;
+    			border-radius: 6px;
+    			overflow: hidden;
+    			background: lighten(@back, 20%);
+    			.useHardware();	
+    			.progress, .buffer {
+	    			display:block;
+	    			position:absolute;
+	    			left:0;
+	    			width: 0;
+	    			height: 100%;	    			
+	    		}
+	    		.progress {
+	    			background: lighten(@fore, 10%);
+	    		}
+	    		.buffer {
+	    			background: @buffer;
+	    		}	    		
+    		}
+    		.scrub {
+	    		.circle(18px);
+	    		position: absolute;
+				top: 50%;
+				left: 0;
+				margin-top: -10px;
+				background: @fore;
+	    	}	    	
+    	}
+    	.info {
+    		padding: 0 12px;
+    		white-space: nowrap;
+    		color: @text;
+    		.duration {
+    			color: @text-dimmed;
+    		}
+    	}
+    	.play, .pause, .audio-on, .audio-off, .fullscreen, .normal, .share {
+    		.setTransition(color);
+    		&:hover {
+    			color: lighten(@fore, 20%);
+    		}
+    	}
+    	.scrub {
+    		.setTransition(background-color);
+    		&:hover {
+    			background-color: lighten(@fore, 20%);
+    		}
+    	}
+    } 
+    &.canplay {
+        opacity: 1;
+    }
+    .controls {
+        	> .pause, > .normal, > .audio-off {
+				display: none;
+			}
+	}
+    &.playing {
+        & > .overlay {
+            opacity: 0;
+        }
+        .controls {
+        	> .play {
+				display: none;
+			}
+			> .pause {
+				display: table-cell;
+			}
+		}
+    }
+    &.fullscreen {
+		position: fixed;
+		width: 100%!important;
+		height: 100%!important;
+		top: 0;
+		left: 0;
+		border-radius: 0;
+		z-index: 100000;
+        .controls {
+        	> .fullscreen {
+				display: none;
+			}
+			> .normal {
+				display: table-cell;
+			}
+		}
+    }
+    &.mute {
+        .controls {
+        	> .audio-on {
+				display: none;
+			}
+			> .audio-off {
+				display: table-cell;
+			}
+		}
+    }
+    &.youtube {
+        iframe {
+            position: relative;
+            overflow: hidden;
+        }
+    }
+    &.vimeo {
+        iframe {
+            position: relative;
+            overflow: hidden;
+            margin-bottom: -6px;
+        }
+    }
+    &.circle {
+        overflow: hidden;
+        border-radius: 50%;
+    }
+    & .btn-play, 
+    & .poster .btn-play {
+        position: relative!important;
+        display: inline-block!important;
+        margin: -50% 0 0 0!important;
+    }    
+}
+
+.mediaplayer-fullscreen,
+.mediaplayer-fullscreen body {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	margin: 0;
+	padding: 0;
+}

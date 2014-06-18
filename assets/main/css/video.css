@@ -1,0 +1,95 @@
+/*--------------------------------------------------
+G R U N T  B O I L E R P L A T E
+website by websolute
+--------------------------------------------------*/
+
+/*--------------------------------------------------
+Mediaplayer Icons
+--------------------------------------------------*/
+@import url('http://i.icomoon.io/public/temp/5e51e7d4d3/mediaplayer/style.css') screen;
+
+/*--------------------------------------------------
+Videoplayer
+--------------------------------------------------*/
+	videoplayer video,
+	videoplayer,
+	videoplayer > overlay,
+	videoplayer > overlay > .poster,
+	videoplayer > .youtubeplayer,
+	videoplayer > .html5player {
+		display: block;
+		position: relative;
+		width: 100%;
+	}
+	videoplayer {
+		display: block;
+		position: relative;
+		width: 100%; height: auto;
+		margin: 0; padding: 0;
+		cursor: pointer;
+		min-height: 100px;
+		margin-bottom: 200px;
+		opacity: 0;
+
+		border-radius: 4px;
+		overflow: hidden;
+		-webkit-transform: scale3d(1,1,1);
+		-moz-transform: scale3d(1,1,1);
+		-ms-transform: scale3d(1,1,1);
+		-o-transform: scale3d(1,1,1);
+		transform: scale3d(1,1,1);
+
+		background: red;
+	}
+	videoplayer.canplay {
+		opacity: 1;
+	}
+	videoplayer > overlay {
+		background: rgba(0,0,0,.2);		
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		top: 0;
+		left: 0;
+		text-align: center;
+		opacity: 1;
+		-webkit-transition: ease-in-out opacity .25s;
+		-moz-transition:	ease-in-out opacity .25s;
+		-ms-transition:		ease-in-out opacity .25s;
+		-o-transition: 		ease-in-out opacity .25s;
+		transition: 		ease-in-out opacity .25s;
+	}
+	videoplayer.playing > overlay {
+		opacity: 0;
+	}
+	videoplayer {
+		overflow: hidden;
+	}
+	videoplayer .btn-play,
+	videoplayer.poster .btn-play {
+		position: relative!important;
+		display: inline-block!important;
+		margin: -50% 0 0 0!important;		
+	}
+	videoplayer.youtube iframe {
+		position: relative;
+		overflow: hidden;
+	}
+	videoplayer.vimeo iframe {
+		position: relative;
+		overflow: hidden;
+		margin-bottom: -6px;
+	}
+	videoplayer.circle {
+		overflow: hidden;
+		border-radius: 50%;
+		
+	}
+
+	/*--------------------------------------------------
+	Controls
+	--------------------------------------------------*/
+
+	controls {
+		
+	}

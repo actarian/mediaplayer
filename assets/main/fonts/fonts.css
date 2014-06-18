@@ -1,0 +1,25 @@
+	
+	@import url(http://fonts.googleapis.com/css?family=Lato:300,900);
+
+	@import url(http://fonts.googleapis.com/css?family=Open+Sans+Condensed:700);
+
+	/*
+	@font-face {
+	    font-family: 'Tinos';
+	    font-weight: 100;
+	    font-style: italic;
+	    src: local('Tinos Italic'),    			url('tinos-italic-webfont.eot');
+	    src: local('Tinos Italic'),    			url('tinos-italic-webfont.eot?#iefix') format('embedded-opentype'),
+	                            				url('tinos-italic-webfont.woff') format('woff'),
+	                            				url('tinos-italic-webfont.ttf') format('truetype');
+	}
+	@font-face {
+	    font-family: 'Tinos';
+	    font-weight: 300;
+	    font-style: italic;
+	    src: local('Tinos Bold Italic'),       	url('tinos-bolditalic-webfont.eot');
+	    src: local('Tinos Bold Italic'),       	url('tinos-bolditalic-webfont.eot?#iefix') format('embedded-opentype'),
+	                                    		url('tinos-bolditalic-webfont.woff') format('woff'),
+	                                    		url('tinos-bolditalic-webfont.ttf') format('truetype');
+	}
+	*/

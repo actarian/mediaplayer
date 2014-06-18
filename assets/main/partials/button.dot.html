@@ -1,0 +1,33 @@
+{
+	"title": "Button",
+	"class": "btn btn-cta"
+}
+
+{{ function makeButton (p) { }}
+
+	<a href="{{= (p.route ? p.route + '.html' : '#' ) }}" class="{{=it.class}}" title="{{=p.cta}}" {{= (it.swap ? 'data-swap="'+it.swap+'"' : '' ) }}{{= (p.id ? ' data-id="' + p.id + '"' : '') }}><span>{{=p.cta}}</span></a>
+    
+{{ } }}
+
+{{ makeButton ( getBranch() || it ); }}
+
+{{ function getBranch ($items) {
+	$items = $items || it.items;
+	var branch = null;
+	if (it.id>0) {
+		var i = 0, a = $items, t = $items.length, p;
+		while(i<t) {
+			p = $items[i];
+			if (p.id == it.id) {
+				return p;
+			} else if ( p.items ) {
+				branch = getBranch ( p.items );
+				if (branch) {
+					return branch;
+				}
+			}
+			i++;
+		}
+	}
+	return branch;
+} }}

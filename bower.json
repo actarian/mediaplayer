@@ -1,0 +1,27 @@
+{
+  "name": "master",
+  "version": "0.0.0",
+  "private": true,
+  "homepage": "http://master.dev",
+  "authors": [
+    "Luca Zampetti <lzampetti@gmail.com>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery-legacy": "jquery#1.10",
+    "jquery-modern": "jquery#2.1.1",
+    "modernizr": "",
+    "bootstrap": "",
+    "html5shiv": "",
+    "respond": "",
+    "ua": "git://github.com/actarian/ua.git",
+    "skrollr": ""
+  }
+}

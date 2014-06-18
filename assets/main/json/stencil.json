@@ -1,0 +1,25 @@
+{
+    "title": "Kemon",
+    "items": [
+        {
+            "id": 1,
+            "route": "#why-use-boilerplate",
+            "title": "Why use boilerplate"
+        },
+        {
+            "id": 2,
+            "route": "#what-s-included",
+            "title": "What's included"
+        },
+        {
+            "id": 3,
+            "route": "#installation",
+            "title": "Installation"
+        },
+        {
+            "id": 4,
+            "route": "#usage",
+            "title": "Usage"
+        }
+    ]
+}

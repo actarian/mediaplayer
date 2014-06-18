@@ -1,0 +1,71 @@
+
+{{ function getSubItems ($items) {
+	var subItems = null;
+	if (it.subId && $items) {
+		var i = 0, a = $items, t = $items.length, p;
+		while(i<t) {
+			p = $items[i];
+			if (p.id == it.subId) {
+				return p.items;
+			} else {
+				subItems = getSubItems ( p.items );
+			}
+			i++;
+		}
+	}
+	return subItems;
+} }}
+
+{{ makeUl( getSubItems( it.items ) || it.items ); }}
+
+{{ function makeUl(items) { }}
+{{? items && items.length }}
+	<ul class="nav navbar-nav">
+    {{~ items :p}}
+    {{? it.id == p.id || hasId (p) }}
+    	<li class="active">
+    {{?? true}}
+    	<li>
+    {{?}}
+    	{{? p.route }}
+	    	<a href="{{=p.route}}"{{= (p.id ? ' data-id="' + p.id + '"' : '') }}>{{=p.title}}</a>
+	    {{?? true}}
+	       	<a href="#">{{=p.title}}</a>
+	    {{?}}
+		{{ (hasSubItems(p.items) ? makeUl( p.items ) : null); }}
+    	</li>
+    {{~}}
+	</ul>
+{{?}}
+{{ } }}
+
+{{ function hasSubItems ($items) {
+	var hasItems = false;
+	if ($items) {
+		var i = 0, a = $items, t = $items.length, p;
+		while(i<t) {
+			p = $items[i];
+			if (p.menu) {
+				return true;
+			}
+			i++;
+		}
+	}
+	return hasItems;
+} }}
+
+{{ function hasId(p) {
+	var has = false;
+	if (p.items && p.items.length) {
+		var i = 0, t = p.items.length, j = null;
+		while(i<t) {
+			j = p.items[i];
+			if (it.id == j.id) {
+			has = true;
+			}
+			!has ? has = hasId(j) : null;
+			i++;
+		}
+	}
+	return has;
+} }}

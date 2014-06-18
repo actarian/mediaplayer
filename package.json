@@ -1,0 +1,31 @@
+{
+  "name": "video",
+  "version": "0.0.1",
+  "private": true,
+  "homepage": "https://github.com/actarian/video",
+  "authors": [
+    "Luca Zampetti <lzampetti@gmail.com>"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "grunt":                  "*",
+    "grunt-exec":             "*",
+    "grunt-open":             "*",
+    "grunt-contrib-connect":  "*",
+    "grunt-contrib-clean":    "*",
+    "grunt-contrib-copy":     "*",
+    "grunt-contrib-watch":    "*",
+    "grunt-contrib-imagemin": "*",
+    "grunt-contrib-less":     "*",
+    "grunt-contrib-csslint":  "*",
+    "grunt-contrib-cssmin":   "*",
+    "grunt-contrib-uglify":   "*",
+    "grunt-contrib-jshint":   "*",
+    "grunt-stencil":          "*",
+    "grunt-modernizr":         "*",
+    "grunt-devcode":          "*",
+    "grunt-prettify":         "*",
+    "bower":                  "*"
+  },
+  "engine": "node >= 0.10"
+}

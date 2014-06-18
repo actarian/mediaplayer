@@ -1,0 +1,50 @@
+{
+    "name":        "grunt-boilerplate",
+    "version":     "0.0.1",
+    "homepage":    "http://extranet.wslabs.it/grunt-boilerplate",
+    "git":         "http://github.com/actarian/grunt-boilerplate",
+    "authors": [
+        "Luca Zampetti <lzampetti@gmail.com>"
+    ],
+    "license": "MIT",
+    "dependencies": {
+        "jquery-legacy": {
+            "source": "jquery",
+            "version":  "jquery#1.10"
+        },
+        "jquery-modern": {
+            "source": "jquery",
+            "version": "jquery#2.1.1"
+        },
+        "modernizr": {
+            "source": "modernizr",
+            "version": ""
+        },
+        "bootstrap": {
+            "source": "bootstrap",
+            "version": ""
+        },
+        "html5shiv": {
+            "source": "html5shiv",
+            "version": ""
+        },
+        "respond": {
+            "source": "respond",
+            "version": ""
+        },
+        "ua": {
+            "source": "ua",
+            "version": "git://github.com/actarian/ua.git"
+        },
+        "skrollr": {
+            "source": "skrollr",
+            "version": ""
+        }
+    },
+    "folder": {
+        "source"    : "assets",
+        "dist"      : "dist_",
+        "vendor"    : "vendor",
+        "temp"      : "temp"
+    }
+}

@@ -1,0 +1,58 @@
+/*--------------------------------------------------
+G R U N T  B O I L E R P L A T E
+website by websolute
+--------------------------------------------------*/
+
+
+/*--------------------------------------------------
+Debug
+--------------------------------------------------*/
+	/*
+	info {
+		display:none;
+	}
+	.debug info,
+	.debug body::before {
+		display:block;
+		position: fixed;
+		bottom: 0;
+		z-index: 100;
+		padding: 5px 10px;
+		text-align: center;
+		min-width: 150px;
+		background: rgba(0,0,0,.5);
+		color: white;
+		font-weight: 700;
+		font-family: 'Arial', sans serif;
+		letter-spacing: 0;
+		font-size: 12px;
+	}
+	.debug body::before {
+		right: 0;
+	}
+	/*XS
+	@media (max-width: 767px) {
+		.debug body::before {
+			content: 'XS max-width 767';
+		}
+	}
+	/*SM
+	@media (min-width: 768px) and (max-width: 991px) {
+		.debug body::before {
+			content: 'SM min-width 768';
+		}
+	}
+	/*MD
+	@media (min-width: 992px) and (max-width: 1199px) {
+		.debug body::before {
+			content: 'MD min-width 992';
+		}
+	}
+	/*LG
+	@media (min-width: 1200px) {
+		.debug body::before {
+			content: 'LG min-width 1200';
+		}
+	}
+	*/
+	

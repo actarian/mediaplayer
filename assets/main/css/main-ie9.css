@@ -1,0 +1,24 @@
+/*--------------------------------------------------
+G R U N T  B O I L E R P L A T E
+website by websolute
+--------------------------------------------------*/
+
+/*--------------------------------------------------
+IE 8-9 Fixes
+--------------------------------------------------*/
+	.debug.ie8 info:after,
+	.debug.ie9 info:after {
+		content: '';
+		display: block;
+		position: absolute;
+		right: -50px;
+		width: 50px;
+		background: red;
+		color: white;
+	}
+	.debug.ie9 info:after {
+		content: 'IE9';
+	}
+	.debug.ie8 info:after {
+		content: 'IE8';
+	}
