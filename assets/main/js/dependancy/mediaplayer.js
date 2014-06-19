@@ -3,6 +3,10 @@ M E D I A P L A Y E R
 ********************************/
 
 var Mediaplayer = function () {
+    if (Mediaplayer) {
+        Mediaplayer.Query ();
+        return Mediaplayer;
+    }
 
     /********************************
     S U B C L A S S E S 
@@ -17,7 +21,7 @@ var Mediaplayer = function () {
 
         Skin.overlay = function () {
             var html = '<div class="overlay">';
-            html += '   <a class="btn btn-cta btn-play" title="Play Video"><span>Play Video</span></a>';
+            html += '   <a class="btn btn-cta btn-play" title="Play Video"><i class="icon-play"></i></a>';
             html += '</div>';
             return $(html);
         };
@@ -760,10 +764,10 @@ var Mediaplayer = function () {
         // console.log ('Mediaplayer.onReady', $item);
         setTimeout (function(){
             $item.mediaplayer.removeClass('loading').addClass('canplay');
-            Resize();
+            Resize($item);
             $item.callback ? $item.callback() : null;
             Minimize.call($item.mediaplayer[0]);
-        }, 50);
+        }, 5000);
     }
     function onLoadComplete($item) {
         // console.log ('Mediaplayer.onLoadComplete', $item);           
@@ -835,21 +839,22 @@ var Mediaplayer = function () {
                 mediaplayer.addClass('html5');
                 VideoHtml5.Load(item);
             }
-
         });
     }
 
     function Poster($item) {
-        $('<img src="' + $item.poster + '" class="poster"/>').prependTo($item.mediaplayer.find('.overlay'));
+        var poster = $item.poster;
+        $item.poster = $('<img src="' + poster + '" class="poster"/>').prependTo($item.mediaplayer.find('.overlay'));
         var img = new Image();
         img.onload = function () {
             $item.posterWidth = this.naturalWidth;
             $item.posterHeight = this.naturalHeight;
-            Resize();
+            console.log('Mediaplayer.Poster', $item.posterWidth, $item.posterHeight);
+            Resize($item);
         };
         img.onerror = function () {
         };
-        img.src = $item.poster;
+        img.src = poster;
         $item.mediaplayer.addClass('poster');
     }
 
@@ -857,77 +862,122 @@ var Mediaplayer = function () {
     win.on('resize', function () {
         Resize();
     });
-    function Resize() {
+    function Resize($item) {
+        console.log('Mediaplayer.Resize');
         // var ww = win.width();
         // var wh = win.height();
-        $.each(items, function (i, item) {
+        function resizeItem(item) {
             var vw = item.mediaplayer.width();
             var vh = item.mediaplayer.height();
             var vr = vw / vh;
             var ir = 16 / 9;
+            var pr = ir;
+            console.log('Mediaplayer.resizeItem', item.posterWidth, item.videoWidth);
+            if (item.posterWidth) {
+                pr = item.posterWidth / item.posterHeight;
+            }
             if (item.videoWidth) {
                 ir = item.videoWidth / item.videoHeight;
-            } else if (item.posterWidth) {
-                ir = item.posterWidth / item.posterHeight;
+            } else {
+                ir = pr;
             }
-            var nw, nh, nl, nt, d = 2;
+            var nw, nh, nl, nt, pw, ph, pl, pt, d = 2;
             // CROP
-            if (item.player) {
-                if (item.crop) {
-                    if (item.circle) {
-                        vh = vw;
-                        vr = 1;
-                        item.mediaplayer.height(Math.round(vh));
-                    }
-                    if (ir > vr) {
-                        nh = vh + d;
-                        nw = nh * ir;
-                    } else {
-                        nw = vw + d;
-                        nh = nw / ir;
-                    }
-                    nl = (vw - nw) / 2;
-                    nt = (vh - nh) / 2;
-                } else {
-                    nw = vw;
-                    nh = vw / ir;
-                    nl = 0;
-                    nt = 0;
-                    if (item.vimeo || item.youtube) {
-                        item.mediaplayer.height(Math.round(nh));
-                    }
+            if (item.crop) {
+                if (item.circle) {
+                    vh = vw;
+                    vr = 1;
+                    item.mediaplayer.height(Math.round(vh));
                 }
-                nw = Math.round(nw);
-                nh = Math.round(nh);
-                nl = Math.round(nl);
-                nt = Math.round(nt);
-                var iframe;
-                if (item.vimeo) {
-                    iframe = item.mediaplayer.find('iframe');
-                    iframe.css({
-                        'width': nw + 'px',
-                        'height': (nh + 120) + 'px',
-                        'left': nl + 'px',
-                        'top': (nt - 60) + 'px'
-                    });
-                } else if (item.youtube) {
+                if (ir > vr) {
+                    nh = vh + d;
+                    nw = nh * ir;
+                } else {
+                    nw = vw + d;
+                    nh = nw / ir;
+                }
+                nl = (vw - nw) / 2;
+                nt = (vh - nh) / 2;
+                if (pr > vr) {
+                    ph = vh + d;
+                    pw = ph * pr;
+                } else {
+                    pw = vw + d;
+                    ph = pw / pr;
+                }
+                pl = (vw - pw) / 2;
+                pt = (vh - ph) / 2;
+            } else {
+                nw = vw;
+                nh = vw / ir;
+                nl = 0;
+                nt = 0;
+                /*
+                if (item.vimeo || item.youtube) {
+                    item.mediaplayer.height(Math.round(nh));
+                }
+                */
+                pw = vw;
+                ph = vw / pr;
+                pl = 0;
+                pt = 0;
+                console.log('item.videoWidth', item.videoWidth);
+                if (item.videoWidth) {
+                    item.mediaplayer.height(Math.round(nh));
+                } else if (item.posterWidth) {
+                    console.log('posterWidth', ph);
+                    item.mediaplayer.height(Math.round(ph));
+                }
+            }
+            nw = Math.round(nw);
+            nh = Math.round(nh);
+            nl = Math.round(nl);
+            nt = Math.round(nt);
+            pw = Math.round(pw);
+            ph = Math.round(ph);
+            pl = Math.round(pl);
+            pt = Math.round(pt);
+            var iframe;
+            if (item.poster) {
+                item.poster.css({
+                    'width': pw + 'px',
+                    'height': ph + 'px',
+                    'left': pl + 'px',
+                    'top': pt + 'px'
+                });
+            }
+            if (item.vimeo) {
+                iframe = item.mediaplayer.find('iframe');
+                iframe.css({
+                    'width': nw + 'px',
+                    'height': (nh + 120) + 'px',
+                    'left': nl + 'px',
+                    'top': (nt - 60) + 'px'
+                });
+            } else if (item.youtube) {
+                if (item.player) {
                     item.player.width = nw;
                     item.player.height = nh + 240;
-                    iframe = item.mediaplayer.find('iframe');
-                    iframe.css({
-                        'width': nw + 'px',
-                        'height': (nh + 240) + 'px',
-                        'left': nl + 'px',
-                        'top': (nt - 120) + 'px'
-                    });
-                } else {
-                    item.player.width = nw;
-                    item.player.height = nh;
                 }
+                iframe = item.mediaplayer.find('iframe');
+                iframe.css({
+                    'width': nw + 'px',
+                    'height': (nh + 240) + 'px',
+                    'left': nl + 'px',
+                    'top': (nt - 120) + 'px'
+                });
+            } else if (item.player) {
+                item.player.width = nw;
+                item.player.height = nh;
             }
-            // console.log ('Mediaplayer.Resize', nw, nh);              
+            // console.log ('Mediaplayer.Resize', nw, nh);  
+        }
+        if ($item) {
+            return resizeItem($item);
+        }
+        $.each(items, function (i, item) {
+              resizeItem(item);          
         });
-
     }
 
     function Clear() {
@@ -989,7 +1039,7 @@ var Mediaplayer = function () {
             item.fullscreen = true;
             mediaplayer.addClass('fullscreen');
             $('html').addClass('mediaplayer-fullscreen');
-            Resize();
+            Resize(item);
         }
     }
     function Normal() {
@@ -1000,7 +1050,7 @@ var Mediaplayer = function () {
             item.fullscreen = false;
             mediaplayer.removeClass('fullscreen');
             $('html').removeClass('mediaplayer-fullscreen');
-            Resize();
+            Resize(item);
         }
     }
     function Mute() {
@@ -1199,6 +1249,10 @@ var Mediaplayer = function () {
         return false;
     });
     
+    function Query () {
+        console.log('Mediaplayer.Query');
+    }
+
     var Mediaplayer = {
     };
 
@@ -1206,6 +1260,9 @@ var Mediaplayer = function () {
     Mediaplayer.Clear = Clear;
     Mediaplayer.togglePlay = togglePlay;
     Mediaplayer.mediaplayers = mediaplayers;
+    Mediaplayer.Query = Query;
+
+    Query ();
 
     $(window).load(function () {
         Mediaplayer.Init(function () {

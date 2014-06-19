@@ -6,6 +6,13 @@ M E D I A P L A Y E R
 @import "mediaplayer.variables.less";
 @import "mediaplayer.mixins.less";
 
+body {
+    -webkit-perspective: 500px;
+    -moz-perspective: 500px;
+    -o-perspective: 500px;
+    -ms-perspective: 500px;
+    perspective: 500px;
+}
 .mediaplayer video, 
 .mediaplayer, 
 .mediaplayer & > .overlay, 
@@ -22,15 +29,14 @@ M E D I A P L A Y E R
     margin: 0;
     margin-bottom: 20px;
     padding: 0;
-    min-height: 100px;
     width: 100%;
     height: auto;
     border-radius: 6px;
-    background: red;
-    opacity: 0;
     cursor: pointer;
     overflow: hidden;
-	.useHardware();	
+    .setTransition(height);
+
+    .useHardware();	
     > .overlay {
         position: absolute;
         top: 0;
@@ -128,14 +134,35 @@ M E D I A P L A Y E R
     			background-color: lighten(@fore, 20%);
     		}
     	}
-    } 
+    }
+    .controls, .overlay, .overlay .btn-play {
+        visibility: hidden;
+    }
+    &.loading {
+        min-height: 100px;
+        background: #eeeeee;
+        > * {
+            visibility: hidden;
+        }
+        .overlay {
+            visibility: visible;
+            
+        }
+    }
     &.canplay {
-        opacity: 1;
+        .controls, .overlay, .overlay .btn-play {
+            visibility: visible;
+        }
+    }
+    &.poster {
+        .overlay {
+            visibility: visible;
+        }
     }
     .controls {
-        	> .pause, > .normal, > .audio-off {
-				display: none;
-			}
+    	> .pause, > .normal, > .audio-off {
+			display: none;
+		}
 	}
     .controls, .timeline, .track, .progress, .buffer {
         .setTransition(all);
@@ -205,30 +232,32 @@ M E D I A P L A Y E R
 			}
 		}
     }
+    iframe, video, .overlay {
+        .useHardware();
+    }
     &.youtube {
         iframe {
             position: relative;
-            overflow: hidden;
         }
     }
     &.vimeo {
         iframe {
             position: relative;
-            overflow: hidden;
             margin-bottom: -6px;
         }
     }
     &.circle {
-        overflow: hidden;
         border-radius: 50%;
     }
-    .big-play {
+    .btn-play {
         display: block;
         position: absolute;
         .circle(110px);
         background: @back;
         color: @fore;
         margin: -55px 0 0 -55px;
+        padding: 0;
+        border: 0;
         top: 50%;
         left: 50%;
         font-size: 50px;
