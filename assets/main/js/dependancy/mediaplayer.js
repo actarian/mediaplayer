@@ -17,7 +17,7 @@ var Mediaplayer = function () {
 
         Skin.overlay = function () {
             var html = '<div class="overlay">';
-            html += '	<a href="#" class="btn btn-cta btn-play" title="Play Video"><span>Play Video</span></a>';
+            html += '	<div class="big-play" title="Play Video"><i class="icon-play"></i></div>';
             html += '</div>';
             return $(html);
         };
@@ -169,6 +169,12 @@ var Mediaplayer = function () {
             item.buffering = true;
             item.onState ? item.onState(item) : null;
         }
+        function onVideoSeeked($e) {
+            var player = $($e.target)[0];
+            var item = players[player.id];
+            // console.log ('VideoHtml5.onVideoWaiting', item);
+            item.onState ? item.onState(item) : null;
+        }
 
         function Load($item) {
             $item.id = 'videohtml5-' + count; count++;
@@ -185,6 +191,7 @@ var Mediaplayer = function () {
             player.addEventListener('play', onVideoPlay, false);
             player.addEventListener('pause', onVideoPause, false);
             player.addEventListener('waiting', onVideoWaiting, false);
+            player.addEventListener('seeked', onVideoSeeked, false);
             player.id = $item.id;
 
             $item.player = player;
@@ -201,6 +208,9 @@ var Mediaplayer = function () {
             };
             $item.UnMute = function () {
                 player.muted = false;
+            };
+            $item.Seek = function ($pow) {
+                player.currentTime = ($pow * this.duration);
             };
             player.load();
             // console.log ('VideoHtml5.Load', $item.id, players);
@@ -397,6 +407,9 @@ var Mediaplayer = function () {
             };
             $item.UnMute = function () {
                 player.unMute();
+            };
+            $item.Seek = function ($pow, $ahead) {
+                player.seekTo($pow * this.duration, $ahead);
             };
             $item.onLoad ? $item.onLoad($item) : null;
         }
@@ -657,6 +670,9 @@ var Mediaplayer = function () {
             $item.UnMute = function () {
                 player.api('setVolume', 1);
             };
+            $item.Seek = function ($pow) {
+                player.api('seekTo', $pow * this.duration);
+            };
             $item.onLoad ? $item.onLoad($item) : null;
         }
 
@@ -741,10 +757,13 @@ var Mediaplayer = function () {
         }	
     }
     function onReady($item) {
-        // console.log ('Mediaplayer.onReady', $item);		
-        $item.mediaplayer.removeClass('loading').addClass('canplay');
-        Resize();
-        $item.callback ? $item.callback() : null;
+        // console.log ('Mediaplayer.onReady', $item);
+        setTimeout (function(){
+            $item.mediaplayer.removeClass('loading').addClass('canplay');
+            Resize();
+            $item.callback ? $item.callback() : null;
+            Minimize.call($item.mediaplayer[0]);
+        }, 50);
     }
     function onLoadComplete($item) {
         // console.log ('Mediaplayer.onLoadComplete', $item);			
@@ -758,7 +777,7 @@ var Mediaplayer = function () {
         $item.mediaplayer.addClass('error');
     }
     function onState($item) {
-        console.log ('Mediaplayer.onState', $item);
+        // console.log ('Mediaplayer.onState', $item);
         $item.paused ? $item.mediaplayer.removeClass('playing') : $item.mediaplayer.addClass('playing');
         $item.buffering ? $item.mediaplayer.addClass('buffering') : $item.mediaplayer.removeClass('buffering');
     }
@@ -922,6 +941,15 @@ var Mediaplayer = function () {
         */
     }
 
+    function stopAll() {
+        // console.log ('Mediaplayer.stopAll', video);
+        for (var p in mediaplayers) {
+            var item = mediaplayers[p];
+            if (item.player && !item.paused) {
+                item.Stop();
+            }    
+        }
+    }
     function togglePlay() {
         // console.log ('Mediaplayer.togglePlay', video);
         var mediaplayer = getMediaplayer.call(this);
@@ -929,18 +957,20 @@ var Mediaplayer = function () {
         // console.log(mediaplayer);
         if (item.player) {
             if (item.paused) {
+                stopAll ();
                 item.Play();
             } else {
                 item.Stop();
             }
         }
     }
-	function Play() {
+    function Play() {
 		var mediaplayer = getMediaplayer.call(this);
 		var item = mediaplayers[mediaplayer.attr('id')];
 		// console.log(mediaplayer);
 		if (item.player && item.paused) {
-			item.Play();
+			stopAll ();
+            item.Play();
 		}
     }
     function Pause() {
@@ -984,37 +1014,100 @@ var Mediaplayer = function () {
     }
     function UnMute() {
         var mediaplayer = getMediaplayer.call(this);
-		var item = mediaplayers[mediaplayer.attr('id')];
-		if (item.player && item.mute) {
-			item.mute = false;
-			mediaplayer.removeClass('mute');
-			item.UnMute();
-		}
+        var item = mediaplayers[mediaplayer.attr('id')];
+        if (item.player && item.mute) {
+            item.mute = false;
+            mediaplayer.removeClass('mute');
+            item.UnMute();
+        }
     }
-    function ScrubStart($e) {
+    function Seek($pow) {
         var mediaplayer = getMediaplayer.call(this);
-		var item = mediaplayers[mediaplayer.attr('id')];
-		if (item.player) {
-			item.scrubbing = true;
-		}
+        var item = mediaplayers[mediaplayer.attr('id')];
+        // console.log(mediaplayer);
+        if (item.player) {
+            item.Seek($pow);
+        }
     }
-    function ScrubMove($e) {
+    function Share() {
+        var mediaplayer = getMediaplayer.call(this);
+        var item = mediaplayers[mediaplayer.attr('id')];
+        if (item.player) {
+            alert('Share ' + item.id);
+            var token = '52de26c95a1edeb7f26eace81df6f2c991cc6a22';
+            var longUrl = escape('http://extranet.wslabs.it/ios/kemon/public/');
+            $.ajax({
+                dataType: "json",
+                method: 'GET',
+                url: 'https://api-ssl.bitly.com/v3/user/link_save?access_token='+token+'&longUrl='+longUrl,
+                success: function($json) {
+                    console.log ('Mediaplayer.Share', $json);
+                }                
+            })
+        }
+    }
+    function Minimize() {
+        // console.log('Minimize');
+        var mediaplayer = getMediaplayer.call(this);
+        mediaplayer.removeClass('minimized');
+        var item = mediaplayers[mediaplayer.attr('id')];
+        if (item.player) {
+            if (item.mto) {
+                clearTimeout(item.mto);
+            }
+            item.mto = setTimeout (function(){
+                mediaplayer.addClass('minimized');
+            }, 8000);
+        }
+    }
+    function ScrubStart($xy) {
+        var mediaplayer = getMediaplayer.call(this);
+        var item = mediaplayers[mediaplayer.attr('id')];
+        if (item.player) {
+            item.scrubbing = { start:$xy, pos:mediaplayer.find('.scrub').position() };
+        }
+        Minimize.call(this);
+    }
+    function ScrubMove($xy) {
         var mediaplayer = getMediaplayerByProp('scrubbing', true);
 		if (mediaplayer) {
 			var item = mediaplayers[mediaplayer.attr('id')];
 			if (item.scrubbing) {
-				
+				item.scrubbing.current = $xy;
+                var tw = mediaplayer.find('.track').width();
+                var dx = item.scrubbing.current.x - item.scrubbing.start.x;
+                var x = Math.max(0, Math.min(tw, item.scrubbing.pos.left + dx));
+                mediaplayer.find('.scrub').css({'left':x+'px'});
 			}
+            Minimize.call(mediaplayer[0]);
 		}
     }
-   function ScrubEnd($e) {
+    function ScrubEnd($xy) {
         var mediaplayer = getMediaplayerByProp('scrubbing', true);
-		if (mediaplayer) {
-			var item = mediaplayers[mediaplayer.attr('id')];
-			if (item.scrubbing) {
-				item.scrubbing = false;
-			}
-		}
+        if (mediaplayer) {
+            var item = mediaplayers[mediaplayer.attr('id')];
+            if (item.scrubbing) {
+                var tw = mediaplayer.find('.track').width();
+                var dx = item.scrubbing.current.x - item.scrubbing.start.x;
+                var x = Math.max(0, Math.min(tw, item.scrubbing.pos.left + dx));
+                mediaplayer.find('.scrub').css({'left':x+'px'});
+                Seek.call(mediaplayer[0], x/tw);
+                item.scrubbing = null;
+            }
+        }
+    }
+    function Track($xy) {
+        var mediaplayer = getMediaplayer.call(this);
+        var item = mediaplayers[mediaplayer.attr('id')];
+        if (item.player) {
+            var track = mediaplayer.find('.track');
+            var tw = track.width();
+            var x = $xy.x - track.offset().left;
+            x = Math.max(0, Math.min(tw, x));
+            mediaplayer.find('.scrub').css({'left':x+'px'});
+            Seek.call(mediaplayer[0], x/tw);
+            item.scrubbing = null;
+        }
     }
     function getMediaplayer() {
         var mediaplayer = $(this);
@@ -1028,7 +1121,7 @@ var Mediaplayer = function () {
         var mediaplayer = null;
         for(var p in mediaplayer) {
         	var item = mediaplayer[p];
-        	if (item[$prop] === $val) {
+        	if (item[$prop] == $val) {
         		mediaplayer = item.mediaplayer;
         	}
         }
@@ -1040,35 +1133,67 @@ var Mediaplayer = function () {
         }
     }
 
-    $('body').on('click', '.mediaplayer > .overlay, .mediaplayer .btn-play', function ($e) {
+    $('body').on('click', '.mediaplayer .overlay, .mediaplayer .big-play', function ($e) {
         togglePlay.call(this);
         return false;
-    }).on('click', '.mediaplayer > .controls > .play', function ($e) {
+    }).on('click', '.mediaplayer .play', function ($e) {
         Play.call(this);
         return false;
-    }).on('click', '.mediaplayer > .controls > .pause', function ($e) {
+    }).on('click', '.mediaplayer .pause', function ($e) {
         Pause.call(this);
         return false;
-    }).on('click', '.mediaplayer > .controls > .fullscreen', function ($e) {
+    }).on('click', '.mediaplayer .fullscreen', function ($e) {
         Fullscreen.call(this);
         return false;
-    }).on('click', '.mediaplayer > .controls > .normal', function ($e) {
+    }).on('click', '.mediaplayer .normal', function ($e) {
         Normal.call(this);
         return false;
-    }).on('click', '.mediaplayer > .controls > .audio-on', function ($e) {
+    }).on('click', '.mediaplayer .audio-on', function ($e) {
         Mute.call(this);
         return false;
-    }).on('click', '.mediaplayer > .controls > .audio-off', function ($e) {
+    }).on('click', '.mediaplayer .audio-off', function ($e) {
         UnMute.call(this);
         return false;
-    }).on('mousedown touchstart', '.mediaplayer > .controls > .scrub', function ($e) {
-        ScrubStart.call(this, $e);
+    }).on('click', '.mediaplayer .share', function ($e) {
+        Share.call(this);
         return false;
-    }).on('mousedown touchmove', function ($e) {
-        ScrubMove($e);
+    }).on('mousedown', '.mediaplayer .scrub', function ($e) {
+        ScrubStart.call(this, {x:$e.clientX, y:$e.clientY});
         return false;
-    }).on('mouseup touchend', function ($e) {
-        ScrubEnd($e);
+    }).on('mousemove mousedown touchstart', '.mediaplayer', function ($e) {
+        Minimize.call(this);
+        return true;
+    }).on('mousemove', function ($e) {
+        ScrubMove({x:$e.clientX, y:$e.clientY});
+        return true;
+    }).on('mouseup', function ($e) {
+        ScrubEnd({x:$e.clientX, y:$e.clientY});
+        return true;
+    }).on('touchstart', '.mediaplayer .scrub', function ($e) {
+        var e = $e.originalEvent;
+        var startX = e.touches[0].pageX;
+        var startY = e.touches[0].pageY;
+        ScrubStart.call(this, {x:startX, y:startY});
+        return false;
+    }).on('touchmove', function ($e) {
+        var e = $e.originalEvent;
+        var startX = e.touches[0].pageX;
+        var startY = e.touches[0].pageY;
+        var curX = e.targetTouches[0].pageX;
+        var curY = e.targetTouches[0].pageY;
+        ScrubMove({x:curX, y:curY});
+        return true;
+    }).on('touchend', function ($e) {
+        ScrubEnd({x:0, y:0});
+        return true;
+    }).on('mouseup', '.mediaplayer .track', function ($e) {
+        Track.call(this, {x:$e.clientX, y:$e.clientY});
+        return true;
+    }).on('touchstart', '.mediaplayer .track', function ($e) {
+        var e = $e.originalEvent;
+        var startX = e.touches[0].pageX;
+        var startY = e.touches[0].pageY;
+        Track.call(this, {x:startX, y:startY});
         return false;
     });
 
@@ -1119,7 +1244,7 @@ var Mediaplayer = function () {
     Mediaplayer.togglePlay = togglePlay;
     Mediaplayer.mediaplayers = mediaplayers;
 
-    $(document).ready(function () {
+    $(window).load(function () {
         Mediaplayer.Init(function () {
             console.log('Mediaplayer.Init.callback');
             // Columnzr.Recol.call(link.closest('.items')[0]);
