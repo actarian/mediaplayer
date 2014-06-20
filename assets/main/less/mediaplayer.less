@@ -35,7 +35,7 @@ body {
     padding: 0;
     width: 100%;
     height: auto;
-    border-radius: 6px;
+    /* border-radius: 6px; */
     cursor: pointer;
     overflow: hidden;
     .setTransition(height);
@@ -139,7 +139,10 @@ body {
             }
         }
     }
-    .controls, .overlay, .overlay .btn-play {
+    .icon-loading {
+        display: none;        
+    }
+    .controls, .overlay {
         visibility: hidden;
     }
     &.loading {
@@ -149,12 +152,14 @@ body {
             visibility: hidden;
         }
         .overlay {
-            visibility: visible;
-            
+            visibility: visible;            
         }
+        .icon-loading {
+            display: inline-block;
+        }        
     }
     &.canplay {
-        .controls, .overlay, .overlay .btn-play {
+        .controls, .overlay {
             visibility: visible;
         }
     }
@@ -253,6 +258,7 @@ body {
     &.circle {
         border-radius: 50%;
     }
+    /*
     .btn-play {
         display: block;
         position: absolute;
@@ -276,6 +282,7 @@ body {
             background-color: lighten(@back, 10%);
         }
     }   
+    */
 }
 
 .mediaplayer-fullscreen,

@@ -21,7 +21,7 @@ var Mediaplayer = function () {
 
         Skin.overlay = function () {
             var html = '<div class="overlay">';
-            html += '   <a class="btn btn-cta btn-play" title="Play Video"><i class="icon-play"></i></a>';
+            html += '   <a class="btn btn-cta btn-play" title="Play Video"><span>Play Video</span><i class="icon-play"></i><i class="icon-loading"></i></a>';
             html += '</div>';
             return $(html);
         };
