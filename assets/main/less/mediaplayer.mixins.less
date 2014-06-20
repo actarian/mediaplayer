@@ -3,29 +3,16 @@ M E D I A P L A Y E R
 ********************************/
 
 .useHardware() {
-	-webkit-transform: 	translate3d(0px, 0px, 0px);
-	-moz-transform: 	translate3d(0px, 0px, 0px);
-	-o-transform: 		translate3d(0px, 0px, 0px);
-	-ms-transform: 		translate3d(0px, 0px, 0px);
-	transform: 			translate3d(0px, 0px, 0px);
-
-	-webkit-backface-visibility: hidden;
-	-moz-backface-visibility: hidden;
-	backface-visibility: hidden;
-
-	-webkit-box-sizing: border-box;
-	-moz-box-sizing: border-box;
-	box-sizing: border-box;
-
-    -webkit-background-clip:padding-box; /* IOS fix */
-    background-clip:padding-box; /* IOS fix */
-
-	border: 0px solid transparent;
+	-moz-transform: scale3d(1,1,1);
+    -ms-transform: scale3d(1,1,1);
+    -o-transform: scale3d(1,1,1);
+    -webkit-transform: scale3d(1,1,1);
+    transform: scale3d(1,1,1);
 }
 .setTransition(@prop) {
-	-webkit-transition: ease-in-out @prop .25s;
 	-moz-transition: ease-in-out @prop .25s;
 	-o-transition: ease-in-out @prop .25s;
+	-webkit-transition: ease-in-out @prop .25s;
 	transition: ease-in-out @prop .25s;
 }
 .square(@size) {
@@ -34,9 +21,7 @@ M E D I A P L A Y E R
 }
 .circle(@size) {
 	.square(@size);
-	-webkit-border-radius: 50%;
-	-moz-border-radius: 50%;
-	border-radius: 50%;
+	border-radius:50%;
 	overflow:hidden;
 	.useHardware();
 }
