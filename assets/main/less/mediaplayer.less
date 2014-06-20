@@ -1,4 +1,8 @@
-@import url('http://i.icomoon.io/public/temp/5e51e7d4d3/mediaplayer/style.css') screen;
+@import url('https://fontastic.s3.amazonaws.com/zjmpukW3v2dqFqwK3FngC6/icons.css') screen;
+/*
+<link href="https://fontastic.s3.amazonaws.com/zjmpukW3v2dqFqwK3FngC6/icons.css" rel="stylesheet">
+@import url('http://i.icomoon.io/public/temp/d115abf7b5/mediaplayer/style.css') screen;
+*/
 /********************************
 M E D I A P L A Y E R
 ********************************/
@@ -6,6 +10,13 @@ M E D I A P L A Y E R
 @import "mediaplayer.variables.less";
 @import "mediaplayer.mixins.less";
 
+body {
+    -webkit-perspective: 500px;
+    -moz-perspective: 500px;
+    -o-perspective: 500px;
+    -ms-perspective: 500px;
+    perspective: 500px;
+}
 .mediaplayer video, 
 .mediaplayer, 
 .mediaplayer & > .overlay, 
@@ -22,15 +33,14 @@ M E D I A P L A Y E R
     margin: 0;
     margin-bottom: 20px;
     padding: 0;
-    min-height: 100px;
     width: 100%;
     height: auto;
     border-radius: 6px;
-    background: red;
-    opacity: 0;
     cursor: pointer;
     overflow: hidden;
-	.useHardware();	
+    .setTransition(height);
+
+    .useHardware(); 
     > .overlay {
         position: absolute;
         top: 0;
@@ -43,100 +53,121 @@ M E D I A P L A Y E R
         .setTransition(opacity);
     }
     .controls {
-    	display: table;
-    	position: absolute;
-    	width: 100%;
-    	height: 46px;
-    	bottom: 0;
+        display: table;
+        position: absolute;
+        width: 100%;
+        height: 46px;
+        bottom: 0;
         padding: 0 8px;
-    	background: @back;
-    	color: @fore;
-    	> div {
-    		display: table-cell;
-    		padding: 0 8px;
-    		vertical-align: middle;
-			text-align: center;
-    		/*
-            border-right: 1px solid darken(@back, 5%); 	
-    		*/
-    		-webkit-font-smoothing: antialiased;
-			-moz-osx-font-smoothing: grayscale;
-    	}
-    	.playpause {
-    		font-family: 'mediaplayer';
-    		content: '\e600'
-    	}
-    	.timeline {
-    		position: relative;
-    		width: 99%;
-    		padding: 0 12px;
-    		margin: 0 20px;
-    		.track {
-    			position: relative;
-    			width: 100%;
-    			height: 10px;
-    			border-radius: 5px;
-    			overflow: hidden;
-    			background: darken(@back, 5%);
-    			.useHardware();	
-    			.progress, .buffer {
-	    			display:block;
-	    			position:absolute;
-	    			left: 0;
-	    			width: 0;
-	    			height: 100%;
-                    .useHardware(); 	    			
-	    		}
-	    		.progress {
-	    			background: lighten(@fore, 10%);
-	    		}
-	    		.buffer {
-	    			background: @buffer;
-	    		}	    		
-    		}
-    		.scrub {
-	    		.circle(18px);
-	    		position: absolute;
-				top: 50%;
-				left: 0;
-				margin-top: -9px;
-				background: @fore;
-	    	}	    	
-    	}
-    	.info {
-    		padding: 0 12px;
-    		white-space: nowrap;
-    		color: @text;
-    		.duration {
-    			color: @text-dimmed;
+        background: @back;
+        color: @fore;
+        > div {
+            display: table-cell;
+            padding: 0 8px;
+            vertical-align: middle;
+            text-align: center;
+            /*
+            border-right: 1px solid darken(@back, 5%);  
+            */
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .playpause {
+            font-family: 'mediaplayer';
+            content: '\e600'
+        }
+        .timeline {
+            position: relative;
+            width: 99%;
+            padding: 0 12px;
+            margin: 0 20px;
+            .track {
+                position: relative;
+                width: 100%;
+                height: 10px;
+                border-radius: 5px;
+                overflow: hidden;
+                background: darken(@back, 5%);
+                .useHardware(); 
+                .progress, .buffer {
+                    display:block;
+                    position:absolute;
+                    left: 0;
+                    width: 0;
+                    height: 100%;
+                    .useHardware();                     
+                }
+                .progress {
+                    background: lighten(@fore, 10%);
+                }
+                .buffer {
+                    background: @buffer;
+                }               
+            }
+            .scrub {
+                .circle(18px);
+                position: absolute;
+                top: 50%;
+                left: 0;
+                margin-top: -9px;
+                background: @fore;
+            }           
+        }
+        .info {
+            padding: 0 12px;
+            white-space: nowrap;
+            color: @text;
+            .duration {
+                color: @text-dimmed;
                 &:before {
                     display:inline-block;
                     content: '/';
                     padding: 0 4px;
                 }
-    		}
-    	}
-    	.play, .pause, .audio-on, .audio-off, .fullscreen, .normal, .share {
-    		.setTransition(color);
-    		&:hover {
-    			color: lighten(@fore, 20%);
-    		}
-    	}
-    	.scrub {
-    		.setTransition(background-color);
-    		&:hover {
-    			background-color: lighten(@fore, 20%);
-    		}
-    	}
-    } 
+            }
+        }
+        .play, .pause, .audio-on, .audio-off, .fullscreen, .normal, .share {
+            .setTransition(color);
+            &:hover {
+                color: lighten(@fore, 20%);
+            }
+        }
+        .scrub {
+            .setTransition(background-color);
+            &:hover {
+                background-color: lighten(@fore, 20%);
+            }
+        }
+    }
+    .controls, .overlay, .overlay .btn-play {
+        visibility: hidden;
+    }
+    &.loading {
+        min-height: 100px;
+        background: #eeeeee;
+        > * {
+            visibility: hidden;
+        }
+        .overlay {
+            visibility: visible;
+            
+        }
+    }
     &.canplay {
-        opacity: 1;
+        .controls, .overlay, .overlay .btn-play {
+            visibility: visible;
+        }
+    }
+    &.poster {
+        .overlay {
+            visibility: visible;
+        }
     }
     .controls {
-        	> .pause, > .normal, > .audio-off {
-				display: none;
-			}
-	}
+        > .pause, > .normal, > .audio-off {
+            display: none;
+        }
+    }
     .controls, .timeline, .track, .progress, .buffer {
         .setTransition(all);
     }
@@ -170,65 +201,67 @@ M E D I A P L A Y E R
             opacity: 0;
         }
         .controls {
-        	> .play {
-				display: none;
-			}
-			> .pause {
-				display: table-cell;
-			}
-		}
+            > .play {
+                display: none;
+            }
+            > .pause {
+                display: table-cell;
+            }
+        }
     }
     &.fullscreen {
-		position: fixed;
-		width: 100%!important;
-		height: 100%!important;
-		top: 0;
-		left: 0;
-		border-radius: 0;
-		z-index: 100000;
+        position: fixed;
+        width: 100%!important;
+        height: 100%!important;
+        top: 0;
+        left: 0;
+        border-radius: 0;
+        z-index: 100000;
         .controls {
-        	> .fullscreen {
-				display: none;
-			}
-			> .normal {
-				display: table-cell;
-			}
-		}
+            > .fullscreen {
+                display: none;
+            }
+            > .normal {
+                display: table-cell;
+            }
+        }
     }
     &.mute {
         .controls {
-        	> .audio-on {
-				display: none;
-			}
-			> .audio-off {
-				display: table-cell;
-			}
-		}
+            > .audio-on {
+                display: none;
+            }
+            > .audio-off {
+                display: table-cell;
+            }
+        }
+    }
+    iframe, video, .overlay {
+        .useHardware();
     }
     &.youtube {
         iframe {
             position: relative;
-            overflow: hidden;
         }
     }
     &.vimeo {
         iframe {
             position: relative;
-            overflow: hidden;
             margin-bottom: -6px;
         }
     }
     &.circle {
-        overflow: hidden;
         border-radius: 50%;
     }
-    .big-play {
+    .btn-play {
         display: block;
         position: absolute;
         .circle(110px);
         background: @back;
         color: @fore;
         margin: -55px 0 0 -55px;
+        padding: 0;
+        border: 0;
         top: 50%;
         left: 50%;
         font-size: 50px;
@@ -247,10 +280,10 @@ M E D I A P L A Y E R
 
 .mediaplayer-fullscreen,
 .mediaplayer-fullscreen body {
-	position: relative;
-	width: 100%;
-	height: 100%;
-	overflow: hidden;
-	margin: 0;
-	padding: 0;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
 }
