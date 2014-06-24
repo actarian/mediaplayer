@@ -113,6 +113,9 @@ module.exports = function(grunt) {
 			img: {
 				src: [ 'dist/img/**/*.*' ]
 			},
+			swf: {
+				src: [ 'dist/swf/**/*.swf' ]
+			},
 			removeUnusedCss: {
 				src: [ 'dist/css/**/*.css', '!dist/css/main.min.css', '!dist/css/main-ie9.min.css' ]
 			},
@@ -190,8 +193,14 @@ module.exports = function(grunt) {
 			},
 			img: {
 				cwd: 'assets/main/img',
-				src: [ 	'**/*.{png,jpg,gif,mpg,webm}'],
+				src: [ 	'**/*.{png,jpg,gif,mp4,mp3,webm}'],
 				dest: 'dist/img',
+				expand: true, flatten: false, filter: 'isFile',
+			},
+			swf: {
+				cwd: 'assets/main/swf',
+				src: [ 	'**/*.swf'],
+				dest: 'dist/swf',
 				expand: true, flatten: false, filter: 'isFile',
 			},
 		},
@@ -228,8 +237,12 @@ module.exports = function(grunt) {
 				tasks: ['dohtml']
 			},
 			img: {
-				files: ['assets/main/img/**/*.jpg', 'assets/main/img/**/*.png', 'assets/main/img/**/*.gif', 'assets/main/img/**/*.mp4', 'assets/main/img/**/*.webm'],
+				files: ['assets/main/img/**/*.jpg', 'assets/main/img/**/*.png', 'assets/main/img/**/*.gif', 'assets/main/img/**/*.mp4', 'assets/main/img/**/*.mp3', 'assets/main/img/**/*.webm'],
 				tasks: ['doimage']
+			},
+			swf: {
+				files: ['assets/main/swf/**/*.swf'],
+				tasks: ['doswf']
 			}
 	    },
 	    exec: {
@@ -638,12 +651,12 @@ module.exports = function(grunt) {
 
 	grunt.registerTask(
 		'docopyDevelopment',
-		[ 'copy:temp', 'copy:jqueryDevelopmentLegacy', 'copy:jsDevelopmentVendor', 'copy:css', 'copy:js', 'copy:fonts', 'copy:img' ]
+		[ 'copy:temp', 'copy:jqueryDevelopmentLegacy', 'copy:jsDevelopmentVendor', 'copy:css', 'copy:js', 'copy:fonts', 'copy:img', 'copy:swf' ]
 	);
 
 	grunt.registerTask(
 		'docopyProduction',
-		[ 'copy:temp', 'copy:jqueryProductionLegacy', 'copy:jsProductionVendor', 'copy:css', 'copy:js', 'copy:fonts', 'copy:img' ]
+		[ 'copy:temp', 'copy:jqueryProductionLegacy', 'copy:jsProductionVendor', 'copy:css', 'copy:js', 'copy:fonts', 'copy:img', 'copy:swf' ]
 	);
 
 	grunt.registerTask(
@@ -672,13 +685,18 @@ module.exports = function(grunt) {
 	);
 
 	grunt.registerTask(
+		'doswf',
+		[ 'copy:swf', /*'imagemin'*/ ]
+	);
+
+	grunt.registerTask(
 		'development',
-		[ 'clean:all', 'docopyDevelopment', 'lessbootstrap', 'less:development', 'less:mediaplayer'/*, 'csslint'*/, 'stencil:development', 'devcode:development', 'prettify', 'modernizr:development', 'copy:img'/*, 'jshint:development'*/, 'connect:server', 'browser', 'watch' ]
+		[ 'clean:all', 'docopyDevelopment', 'lessbootstrap', 'less:development', 'less:mediaplayer'/*, 'csslint'*/, 'stencil:development', 'devcode:development', 'prettify', 'modernizr:development'/*, 'jshint:development'*/, 'connect:server', 'browser', 'watch' ]
 	);
 
 	grunt.registerTask(
 		'production',
-		[ 'clean:all', 'docopyProduction', 'lessbootstrap', 'less:development', 'less:mediaplayer', 'cssmin', 'clean:removeUnusedCss', 'uglify', 'clean:removeUnusedJs', 'stencil:production', 'devcode:production', 'prettify', 'modernizr:production', 'clean:img', 'copy:img'/*, 'jshint:production'*/, 'connect:server', 'browser', 'watch' ]
+		[ 'clean:all', 'docopyProduction', 'lessbootstrap', 'less:development', 'less:mediaplayer', 'cssmin', 'clean:removeUnusedCss', 'uglify', 'clean:removeUnusedJs', 'stencil:production', 'devcode:production', 'prettify', 'modernizr:production'/*, 'jshint:production'*/, 'connect:server', 'browser', 'watch' ]
 	);
 
 	grunt.registerTask('help', 'List of all available commands.', function(arg) {

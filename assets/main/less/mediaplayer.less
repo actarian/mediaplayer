@@ -18,11 +18,15 @@ body {
     perspective: 500px;
 }
 .mediaplayer video, 
+.mediaplayer object, 
+.mediaplayer iframe, 
 .mediaplayer, 
 .mediaplayer & > .overlay, 
 .mediaplayer & > .overlay & > .poster, 
 .mediaplayer & > .youtubeplayer, 
-.mediaplayer & > .html5player {
+.mediaplayer & > .vimeoplayer, 
+.mediaplayer & > .html5player, 
+.mediaplayer & > .flashplayer {
     position: relative;
     display: block;
     width: 100%;
@@ -258,7 +262,7 @@ body {
             }
         }
     }
-    iframe, video, .overlay {
+    iframe, video, object, .overlay {
         .useHardware();
     }
     &.youtube {
