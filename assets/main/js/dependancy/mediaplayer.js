@@ -12,6 +12,22 @@ var Mediaplayer = function () {
     S U B C L A S S E S 
     ********************************/
 
+    var DEBUG = false;
+
+    /********************************
+    Log
+    ********************************/
+
+    var Log = function () {
+        var Log;
+        if (DEBUG && window['console']) {
+            Log = window['console'];
+        } else {
+            Log = function(){};
+        }
+        return Log;
+    }();
+
     /********************************
     Skin
     ********************************/
@@ -21,7 +37,7 @@ var Mediaplayer = function () {
 
         Skin.overlay = function () {
             var html = '<div class="overlay">';
-            html += '   <a class="btn btn-cta btn-play" title="Play Video"><span>Play Video</span><i class="icon-play"></i><i class="icon-loading"></i></a>';
+            html += '   <a class="btn btn-cta btn-play" title="Play Video"><span>Play Video</span><i class="icon-play"></i><i class="icon-loading"></i><i class="icon-broken"></i></a>';
             html += '</div>';
             return $(html);
         };
@@ -89,7 +105,7 @@ var Mediaplayer = function () {
                         + "<br>";
                 var currentTime = video.currentTime / video.duration * 100;
                 videoDiv.find('.btn-play .progress').css({'width': (Math.round(maxBuffer*10)/10) + '%'});
-                // console.log ('Video.updateBuffer', maxBuffer);       
+                // Log ('Video.updateBuffer', maxBuffer);       
                 */
             }
             return maxBuffer;
@@ -98,20 +114,20 @@ var Mediaplayer = function () {
         function onVideoLoadStart($e) {
             var player = $($e.target)[0];
             var item = players[player.id];
-            // console.log ('VideoHtml5.onVideoLoadStart', item);
+            // Log ('VideoHtml5.onVideoLoadStart', item);
             item.onLoad ? item.onLoad(item) : null;
         }
         function onLoadProgress($e) {
             var player = $($e.target)[0];
             var item = players[player.id];
-            // console.log ('VideoHtml5.onLoadProgress', item);
+            // Log ('VideoHtml5.onLoadProgress', item);
             item.buffer = Buffer($e);
             item.onLoadProgress ? item.onLoadProgress(item) : null;
         }
         function onPlayProgress($e) {
             var player = $($e.target)[0];
             var item = players[player.id];
-            // console.log ('VideoHtml5.onPlayProgress', item);
+            // Log ('VideoHtml5.onPlayProgress', item);
             if (!item.duration) {
                 item.duration = player.duration;
             }
@@ -121,7 +137,7 @@ var Mediaplayer = function () {
         function onVideoCanPlay($e) {
             var player = $($e.target)[0];
             var item = players[player.id];
-            // console.log ('VideoHtml5.onVideoCanPlay', item);
+            // Log ('VideoHtml5.onVideoCanPlay', item);
             item.videoWidth = player.videoWidth;
             item.videoHeight = player.videoHeight;
             item.duration = player.duration;
@@ -130,13 +146,13 @@ var Mediaplayer = function () {
         function onVideoCanThrough($e) {
             var player = $($e.target)[0];
             var item = players[player.id];
-            // console.log ('VideoHtml5.onVideoCanThrough', item);
+            // Log ('VideoHtml5.onVideoCanThrough', item);
             item.onLoadComplete ? item.onLoadComplete(item) : null;
         }
         function onVideoEnded($e) {
             var player = $($e.target)[0];
             var item = players[player.id];
-            // console.log ('VideoHtml5.onVideoEnded', item);
+            Log ('VideoHtml5.onVideoEnded', item);
             item.paused = true;
             item.buffering = false;
             item.onEnded ? item.onEnded(item) : null;
@@ -144,7 +160,15 @@ var Mediaplayer = function () {
         function onVideoError($e) {
             var player = $($e.target)[0];
             var item = players[player.id];
-            // console.log ('VideoHtml5.onVideoError', item);
+            // Log ('VideoHtml5.onVideoError', item);
+            item.paused = true;
+            item.buffering = false;
+            item.onError ? item.onError(item) : null;
+        }
+        function onSourceError($e) {
+            var player = $(this).closest('video')[0];
+            var item = players[player.id];
+            // Log ('VideoHtml5.onSourceError', item);
             item.paused = true;
             item.buffering = false;
             item.onError ? item.onError(item) : null;
@@ -152,7 +176,7 @@ var Mediaplayer = function () {
         function onVideoPlay($e) {
             var player = $($e.target)[0];
             var item = players[player.id];
-            // console.log ('VideoHtml5.onVideoPlay', item);
+            // Log ('VideoHtml5.onVideoPlay', item);
             item.paused = false;
             item.buffering = false;
             item.onState ? item.onState(item) : null;
@@ -160,7 +184,7 @@ var Mediaplayer = function () {
         function onVideoPause($e) {
             var player = $($e.target)[0];
             var item = players[player.id];
-            // console.log ('VideoHtml5.onVideoPause', item);
+            // Log ('VideoHtml5.onVideoPause', item);
             item.paused = true;
             item.buffering = false;
             item.onState ? item.onState(item) : null;
@@ -168,15 +192,15 @@ var Mediaplayer = function () {
         function onVideoWaiting($e) {
             var player = $($e.target)[0];
             var item = players[player.id];
-            // console.log ('VideoHtml5.onVideoWaiting', item);
+            // Log ('VideoHtml5.onVideoWaiting', item);
             item.paused = true;
             item.buffering = true;
-            item.onState ? item.onState(item) : null;
+            item.onState ? item.onState(item) : null;           
         }
         function onVideoSeeked($e) {
             var player = $($e.target)[0];
             var item = players[player.id];
-            // console.log ('VideoHtml5.onVideoWaiting', item);
+            // Log ('VideoHtml5.onVideoWaiting', item);
             item.onState ? item.onState(item) : null;
         }
 
@@ -194,9 +218,17 @@ var Mediaplayer = function () {
             player.addEventListener('error', onVideoError, false);
             player.addEventListener('play', onVideoPlay, false);
             player.addEventListener('pause', onVideoPause, false);
-            player.addEventListener('waiting', onVideoWaiting, false);
+            // player.addEventListener('waiting', onVideoWaiting, false);
             player.addEventListener('seeked', onVideoSeeked, false);
+
+            var source = playerTag.find('source')[0];
+            source.addEventListener('error', onSourceError, false);
+            $item.source = source;
+
             player.id = $item.id;
+
+            player.loop = $item.loop || $item.hover;
+            player.autoplay = $item.autoplay;
 
             $item.player = player;
             players[player.id] = $item;
@@ -217,7 +249,7 @@ var Mediaplayer = function () {
                 player.currentTime = ($pow * this.duration);
             };
             player.load();
-            // console.log ('VideoHtml5.Load', $item.id, players);
+            // Log ('VideoHtml5.Load', $item.id, players);
         }
 
         var VideoHtml5 = {};
@@ -227,6 +259,7 @@ var Mediaplayer = function () {
         return VideoHtml5;
 
     }();
+    var AudioHtml5 = VideoHtml5;
 
     /********************************
     VideoYoutube
@@ -237,7 +270,7 @@ var Mediaplayer = function () {
         var INIT = false, READY = false, callbacks = [], players = {};
 
         function Init() {
-            // console.log ('VideoYoutube.Init');
+            // Log ('VideoYoutube.Init');
             if (INIT) {
                 return;
             }
@@ -252,9 +285,9 @@ var Mediaplayer = function () {
             var player = $e.target;
             var item = players[player.id];
 
-            // console.log ('VideoYoutube.onPlayerReady', player);
-            // console.log ('VideoYoutube.onPlayerReady', 'item.id', item.id);
-            // console.log ('VideoYoutube.onPlayerReady.getVideoData', player.width, player.height);
+            // Log ('VideoYoutube.onPlayerReady', player);
+            // Log ('VideoYoutube.onPlayerReady', 'item.id', item.id);
+            // Log ('VideoYoutube.onPlayerReady.getVideoData', player.width, player.height);
             // player.playVideo();
             // player.stopVideo();
             
@@ -262,9 +295,14 @@ var Mediaplayer = function () {
             item.videoHeight = player.height;
             item.duration = player.getDuration();
 
-            item.onReady ? item.onReady(item) : null;
-
-            // console.log('VideoYoutube.onPlayerReady', player.width, player.height);
+            var videoData = player.getVideoData ();
+            if (videoData.video_id != null) {
+                item.videoData = videoData;
+                item.onReady ? item.onReady(item) : null;
+                Log('VideoYoutube.onPlayerReady', videoData);
+            } else {
+                item.onError ? item.onError(item) : null;
+            }
 
             /*
             $.ajax({
@@ -272,7 +310,7 @@ var Mediaplayer = function () {
                 method: 'GET',
                 url: 'http://www.youtube.com/oembed?url=http%3A//www.youtube.com/watch?v%3D'+item.youtube+'&format=json',
                 success: function($json) {
-                    // console.log ('VideoYoutube.onPlayerReady', $json);
+                    // Log ('VideoYoutube.onPlayerReady', $json);
                     item.videoWidth = $json.width;
                     item.videoHeight = $json.height;            
                     item.onReady ? item.onReady(item) : null;
@@ -318,10 +356,10 @@ var Mediaplayer = function () {
             updateProgress (player, item);        
         }
         function onPlayerPlaybackQualityChange($e) {
-            // console.log ('VideoYoutube.onPlayerPlaybackQualityChange', $e.data, $e.target, $e.target.getVideoInfo());
+            // Log ('VideoYoutube.onPlayerPlaybackQualityChange', $e.data, $e.target, $e.target.getVideoInfo());
         }
         function onPlayerStateChange($e) {
-            // console.log ('VideoYoutube.onPlayerStateChange', $e.data);
+            // Log ('VideoYoutube.onPlayerStateChange', $e.data);
             var player = $e.target;
             var item = players[player.id];
             switch ($e.data) {
@@ -352,14 +390,14 @@ var Mediaplayer = function () {
             }
         }
         function onPlayerError($e) {
-            console.log('VideoYoutube.onPlayerError');
+            Log('VideoYoutube.onPlayerError');
             var player = $e.target;
             var item = players[player.id];
             item.onError ? item.onError(item) : null;
         }
-
+        
         function Create($item) {
-            // console.log ('VideoYoutube.Create', $item.id);
+            // Log ('VideoYoutube.Create', $item.id);
             // 'M7lc1UVf-VE'
             /*
             autohide
@@ -385,11 +423,27 @@ var Mediaplayer = function () {
             start
             theme
             */
-            var id = $item.id, url = $item.youtube, player;
+            var id = $item.id, videoId = $item.youtube, player;
+            var playerVars = {
+                'rel': 0, 
+                'playerapiid': id, 
+                'showinfo': 0, 
+                'modestbranding': 1, 
+                'autoplay': $item.autoplay ? 1 : 0, 
+                'controls': 0, 
+                'html5': 1, 
+                'enablejsapi': 1, 
+                'origin': document.location.hostname, 
+                'suggestedQuality': 'hd1080'
+            };
+            if ($item.loop) {
+                playerVars.loop = 1;
+                playerVars.playlist = videoId;
+            }
             player = new YT.Player(id, {
-                videoId: url,
-                playerVars: { 'rel': 0, 'playerapiid': id, 'showinfo': 0, 'modestbranding': 1, 'autoplay': 0, 'controls': 0, 'html5': 1, 'enablejsapi': 1, 'origin': document.location.hostname, 'suggestedQuality': 'hd1080' },
-                events: {
+                'videoId': videoId,
+                'playerVars': playerVars,
+                'events': {
                     'onReady': onPlayerReady,
                     'onPlaybackQualityChange': onPlayerPlaybackQualityChange,
                     'onStateChange': onPlayerStateChange,
@@ -421,7 +475,7 @@ var Mediaplayer = function () {
         function Load($item) {
             $item.id = 'youtube-' + $item.youtube;
             $('<div id="' + $item.id + '" class="youtubeplayer"></div>').prependTo($item.mediaplayer);
-            // console.log ('VideoYoutube.Load', $item.id);
+            // Log ('VideoYoutube.Load', $item.id);
             Init();
             callbacks.push($item);
             if (READY) {
@@ -430,7 +484,7 @@ var Mediaplayer = function () {
         }
 
         function Callbacks() {
-            // console.log ('VideoYoutube.Callbacks');
+            // Log ('VideoYoutube.Callbacks');
             while (callbacks.length > 0) {
                 var item = callbacks.shift();
                 Create(item);
@@ -438,7 +492,7 @@ var Mediaplayer = function () {
         }
 
         function onYouTubeIframeAPIReady() {
-            // console.log ('VideoYoutube.onYouTubeIframeAPIReady');
+            // Log ('VideoYoutube.onYouTubeIframeAPIReady');
             READY = true;
             Callbacks();
         }
@@ -462,7 +516,7 @@ var Mediaplayer = function () {
         var INIT = false, READY = false, callbacks = [], players = {};
 
         function Init() {
-            // console.log ('VideoVimeo.Init');
+            // Log ('VideoVimeo.Init');
             if (INIT) {
                 return;
             }
@@ -474,7 +528,7 @@ var Mediaplayer = function () {
             });
         }
         function onVimeoFroogaloopReady() {
-            // console.log ('VideoVimeo.onVimeoFroogaloopReady');
+            // Log ('VideoVimeo.onVimeoFroogaloopReady');
             READY = true;
             Callbacks();
         }
@@ -482,13 +536,13 @@ var Mediaplayer = function () {
         function onPlayerReady($e) {
             var player = $e.target;
             var item = players[player.id];
-            // console.log ('VideoVimeo.onPlayerReady', item);
-            // console.log ('VideoVimeo.onPlayerReady', 'item.id', item.id);
-            // console.log ('VideoVimeo.onPlayerReady.getVideoData', player.width, player.height);
+            // Log ('VideoVimeo.onPlayerReady', item);
+            // Log ('VideoVimeo.onPlayerReady', 'item.id', item.id);
+            // Log ('VideoVimeo.onPlayerReady.getVideoData', player.width, player.height);
             // player.playVideo();
             // player.stopVideo();
             
-            // console.log('VideoVimeo.onPlayerReady', player.api);
+            // Log('VideoVimeo.onPlayerReady', player.api);
 
             player.api('getVideoWidth', function ($val, $id) {
                 item.videoWidth = parseInt($val, 10);
@@ -496,8 +550,14 @@ var Mediaplayer = function () {
                     item.videoHeight = parseInt($val, 10);
                     player.api('getDuration', function ($val, $id) {
                         item.duration = parseFloat($val);
-                        // console.log('VideoVimeo.onPlayerReady', item.videoWidth, item.videoHeight);
+                        // Log('VideoVimeo.onPlayerReady', item.videoWidth, item.videoHeight);
                         item.onReady ? item.onReady(item) : null;
+                        if (item.loop) {
+                            player.api('setLoop', true);
+                        }
+                        if (item.autoplay) {
+                            item.Play();
+                        }
                     }); 
                 });
             });
@@ -505,10 +565,10 @@ var Mediaplayer = function () {
         }
         /*
         function onPlayerPlaybackQualityChange ($e) {
-            // console.log ('VideoVimeo.onPlayerPlaybackQualityChange', $e.data, $e.target, $e.target.getVideoInfo());
+            // Log ('VideoVimeo.onPlayerPlaybackQualityChange', $e.data, $e.target, $e.target.getVideoInfo());
         }
         function onPlayerStateChange ($e) {
-            // console.log ('VideoVimeo.onPlayerStateChange', $e.data);
+            // Log ('VideoVimeo.onPlayerStateChange', $e.data);
             var player = $e.target;
             var item = players[player.id];
             switch ($e.data) {
@@ -537,18 +597,18 @@ var Mediaplayer = function () {
         */
 
         function onLoadProgress($e) {
-            // console.log ('VideoVimeo.onLoadProgress', arguments);    
+            // Log ('VideoVimeo.onLoadProgress', arguments);    
             var player = $e.target;
             var item = players[player.id];
-            // console.log ($e.data);
+            // Log ($e.data);
             item.buffer = parseFloat($e.data.percent);
             item.onLoadProgress ? item.onLoadProgress(item) : null;
         }
         function onPlayProgress($e) {
-            // console.log ('VideoVimeo.onPlayProgress', arguments);    
+            // Log ('VideoVimeo.onPlayProgress', arguments);    
             var player = $e.target;
             var item = players[player.id];
-            // console.log ($e.data);
+            // Log ($e.data);
             item.progress = parseFloat($e.data.percent);
             if (item.duration == 0) {
                 player.api('getDuration', function ($val, $id) {
@@ -558,15 +618,15 @@ var Mediaplayer = function () {
             item.onPlayProgress ? item.onPlayProgress(item) : null;            
         }
         function onPlayerSeek($e) {
-            // console.log ('VideoVimeo.onPlayerSeek', arguments);  
+            // Log ('VideoVimeo.onPlayerSeek', arguments);  
             var player = $e.target;
             var item = players[player.id];
-            // console.log ($e.data);
+            // Log ($e.data);
             item.progress = parseFloat($e.data.percent);
             item.onSeek ? item.onSeek(item) : null;            
         }
         function onPlayerPlay($e) {
-            // console.log ('VideoVimeo.onPlayerPause', arguments); 
+            // Log ('VideoVimeo.onPlayerPause', arguments); 
             var player = $e.target;
             var item = players[player.id];
             item.paused = false;
@@ -574,7 +634,7 @@ var Mediaplayer = function () {
             item.onState ? item.onState(item) : null;
         }
         function onPlayerPause($e) {
-            // console.log ('VideoVimeo.onPlayerPause', arguments); 
+            // Log ('VideoVimeo.onPlayerPause', arguments); 
             var player = $e.target;
             var item = players[player.id];
             item.paused = true;
@@ -582,108 +642,137 @@ var Mediaplayer = function () {
             item.onState ? item.onState(item) : null;
         }
         function onPlayerEnd($e) {
-            // console.log ('VideoVimeo.onPlayerEnd', arguments);   
+            // Log ('VideoVimeo.onPlayerEnd', arguments);   
             item.paused = false;
             item.buffering = false;
             item.onState ? item.onState(item) : null;
         }
         function onPlayerError($e) {
-            // console.log ('VideoVimeo.onPlayerError');    
+            // Log ('VideoVimeo.onPlayerError');    
             var player = $e.target;
             var item = players[player.id];
             item.onError ? item.onError(item) : null;
         }
+        function onIframeError($item) {
+            // Log ('VideoVimeo.onIframeError', $item);    
+            $item.onError ? $item.onError($item) : null;
+        }
 
         function Create($item) {
-            // console.log ('VideoVimeo.Create', $item.id);
+            // Log ('VideoVimeo.Create', $item.id);
             // 'M7lc1UVf-VE'
-            var id = $item.id, url = $item.vimeo;
-            var ww = $(window).width();
-            var wh = ww / 16 * 9;
+            var id = $item.id, videoId = $item.vimeo;
 
-            var iframe = $('<iframe id="' + id + '" src="http://player.vimeo.com/video/' + url + '?api=1&player_id=' + id + '" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>');
-            iframe.prependTo($item.mediaplayer);
+            function onVimeoApiSuccess ($data) {
+                Log ('VideoVimeo.onVimeoApiSuccess', $data);
+                var ww = $(window).width();
+                var wh = ww / 16 * 9;
 
-            var player = $f(iframe[0]);
-            player.addEvent('ready', function ($id) {
-                onPlayerReady.call(player, { target: player, id: $id });
-                player.addEvent('play', function ($id) {
-                    onPlayerPlay.call(player, { target: player, id: $id });
+                var iframe = $('<iframe id="' + id + '" src="http://player.vimeo.com/video/' + videoId + '?api=1&player_id=' + id + '" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>');
+                iframe.prependTo($item.mediaplayer);
+
+                var player = $f(iframe[0]);
+                player.addEvent('ready', function ($id) {
+                    onPlayerReady.call(player, { target: player, id: $id });
+                    player.addEvent('play', function ($id) {
+                        onPlayerPlay.call(player, { target: player, id: $id });
+                    });
+                    player.addEvent('pause', function ($id) {
+                        onPlayerPause.call(player, { target: player, id: $id });
+                    });
+                    player.addEvent('finish', function ($id) {
+                        onPlayerEnd.call(player, { target: player, id: $id });
+                    });
+                    player.addEvent('playProgress', function ($data, $id) {
+                        onPlayProgress.call(player, { target:player, id: $id, data: $data });
+                    });
+                    player.addEvent('loadProgress', function ($data, $id) {
+                        onLoadProgress.call(player, { target:player, id: $id, data: $data });
+                    });
+                    player.addEvent('seek', function ($data, $id) {
+                        onPlayerSeek.call(player, { target:player, id: $id, data: $data });
+                    });
                 });
-                player.addEvent('pause', function ($id) {
-                    onPlayerPause.call(player, { target: player, id: $id });
-                });
-                player.addEvent('finish', function ($id) {
-                    onPlayerEnd.call(player, { target: player, id: $id });
-                });
-                player.addEvent('playProgress', function ($data, $id) {
-                    onPlayProgress.call(player, { target:player, id: $id, data: $data });
-                });
-                player.addEvent('loadProgress', function ($data, $id) {
-                    onLoadProgress.call(player, { target:player, id: $id, data: $data });
-                });
-                player.addEvent('seek', function ($data, $id) {
-                    onPlayerSeek.call(player, { target:player, id: $id, data: $data });
-                });
+
+                // player.api($(this).text().toLowerCase());
+                /*
+                function onPause(id) {
+                    status.text('paused');
+                }
+
+                function onFinish(id) {
+                    status.text('finished');
+                }
+
+                function onPlayProgress(data, id) {
+                    status.text(data.seconds + 's played');
+                }
+                */
+
+                /*
+                player = new YT.Player(id, {
+                    width: $(window).width(),
+                    height: $(window).width() / 16 * 9,
+                    videoId: videoId,
+                    playerVars: { 'autoplay': 0, 'controls': 0, 'html5':1,'enablejsapi':1, 'origin':document.location.hostname, 'suggestedQuality': 'hd1080' },
+                    events: {
+                        'onReady': onPlayerReady,
+                        'onPlaybackQualityChange': onPlayerPlaybackQualityChange,
+                        'onStateChange': onPlayerStateChange,
+                        'onError': onPlayerError
+                    }
+                })
+                */
+
+                $item.videoData = $data;
+                
+                $item.player = player;
+                players[player.id] = $item;
+
+                $item.Play = function () {
+                    // player.playVideo();
+                    player.api('play');
+                };
+                $item.Stop = function () {
+                    // player.pauseVideo();
+                    player.api('pause');
+                };
+                $item.Mute = function () {
+                    player.api('setVolume', 0);
+                };
+                $item.UnMute = function () {
+                    player.api('setVolume', 1);
+                };
+                $item.Seek = function ($pow) {
+                    player.api('seekTo', $pow * this.duration);
+                };
+                $item.onLoad ? $item.onLoad($item) : null;
+            }
+
+            $.ajax({
+                type: 'GET',
+                url: 'http://vimeo.com/api/v2/video/' + videoId + '.json',
+                dataType: 'json',
+                success: function ($data) {
+                    onVimeoApiSuccess ($data);
+                },
+                error: function (xhr) {
+                    onIframeError($item);
+                    /*
+                    var message = xhr.statusText;
+                    if (xhr.statusText == 'OK') {
+                        message = 'document malformed';
+                    }
+                    */
+                }
             });
 
-            // player.api($(this).text().toLowerCase());
-            /*
-            function onPause(id) {
-                status.text('paused');
-            }
-
-            function onFinish(id) {
-                status.text('finished');
-            }
-
-            function onPlayProgress(data, id) {
-                status.text(data.seconds + 's played');
-            }
-            */
-
-            /*
-            player = new YT.Player(id, {
-                width: $(window).width(),
-                height: $(window).width() / 16 * 9,
-                videoId: url,
-                playerVars: { 'autoplay': 0, 'controls': 0, 'html5':1,'enablejsapi':1, 'origin':document.location.hostname, 'suggestedQuality': 'hd1080' },
-                events: {
-                    'onReady': onPlayerReady,
-                    'onPlaybackQualityChange': onPlayerPlaybackQualityChange,
-                    'onStateChange': onPlayerStateChange,
-                    'onError': onPlayerError
-                }
-            })
-            */
-
-            $item.player = player;
-            players[player.id] = $item;
-
-            $item.Play = function () {
-                // player.playVideo();
-                player.api('play');
-            };
-            $item.Stop = function () {
-                // player.pauseVideo();
-                player.api('pause');
-            };
-            $item.Mute = function () {
-                player.api('setVolume', 0);
-            };
-            $item.UnMute = function () {
-                player.api('setVolume', 1);
-            };
-            $item.Seek = function ($pow) {
-                player.api('seekTo', $pow * this.duration);
-            };
-            $item.onLoad ? $item.onLoad($item) : null;
         }
 
         function Load($item) {
             $item.id = 'vimeo-' + $item.vimeo;
             // $('<div id="'+ $item.id +'" class="vimeoplayer"></div>').prependTo($item.mediaplayer);
-            // console.log('VideoVimeo.Load', $item.id);
+            // Log('VideoVimeo.Load', $item.id);
             Init();
             callbacks.push($item);
             if (READY) {
@@ -692,7 +781,7 @@ var Mediaplayer = function () {
         }
 
         function Callbacks() {
-            // console.log ('VideoVimeo.Callbacks');
+            // Log ('VideoVimeo.Callbacks');
             while (callbacks.length > 0) {
                 var item = callbacks.shift();
                 Create(item);
@@ -733,17 +822,17 @@ var Mediaplayer = function () {
         }
     }
     function onLoad($item) {
-        // console.log ('Mediaplayer.onLoad', $item);   
+        // Log ('Mediaplayer.onLoad', $item);   
         $item.mediaplayer.addClass('loading');
     }
     function onLoadProgress($item) {
-        // console.log ('Mediaplayer.onLoadProgress', $item);   
+        // Log ('Mediaplayer.onLoadProgress', $item);   
         if ($item.controls) {
             $item.controls.find('.buffer').width(($item.buffer * 100) + '%');
         }
     }
     function onPlayProgress($item) {
-        // console.log ('Mediaplayer.onPlayProgress', $item);   
+        // Log ('Mediaplayer.onPlayProgress', $item);   
         if ($item.controls && !$item.scrubbing) {
             $item.controls.find('.progress').width(($item.progress * 100) + '%');
             $item.controls.find('.scrub').css({'left': ($item.progress * 100) + '%'});
@@ -752,7 +841,7 @@ var Mediaplayer = function () {
         }
     }
     function onSeek($item) {
-        // console.log ('Mediaplayer.onSeek', $item);
+        // Log ('Mediaplayer.onSeek', $item);
         if ($item.controls) {
             $item.controls.find('.progress').width(($item.progress * 100) + '%');
             $item.controls.find('.scrub').css({'left': ($item.progress * 100) + '%'});
@@ -761,51 +850,62 @@ var Mediaplayer = function () {
         }   
     }
     function onReady($item) {
-        // console.log ('Mediaplayer.onReady', $item);
-        setTimeout (function(){
-            $item.mediaplayer.removeClass('loading').addClass('canplay');
-            Resize($item);
-            $item.callback ? $item.callback() : null;
-            Minimize.call($item.mediaplayer[0]);
-        }, 100);
+        if (!$item.mediaplayer.hasClass('canplay')) {
+            Log ('Mediaplayer.onReady', $item);
+            setTimeout (function(){
+                $item.mediaplayer.removeClass('loading').addClass('canplay');
+                Resize($item);
+                $item.callback ? $item.callback() : null;
+                Minimize.call($item.mediaplayer[0]);
+            }, 100);
+        }
     }
     function onLoadComplete($item) {
-        // console.log ('Mediaplayer.onLoadComplete', $item);           
+        // Log ('Mediaplayer.onLoadComplete', $item);           
     }
     function onEnded($item) {
-        // console.log ('Mediaplayer.onEnded', $item);
+        Log ('Mediaplayer.onEnded', $item);
+        if ($item.loop) {
+            $item.Seek(0);
+            $item.Play(0);
+        }
         $item.mediaplayer.removeClass('playing');
     }
     function onError($item) {
-        console.log('Mediaplayer.onError', $item);
-        $item.mediaplayer.addClass('error');
+        Log('Mediaplayer.onError', $item);
+        $item.mediaplayer.removeClass('loading').addClass('error');
     }
     function onState($item) {
-        // console.log ('Mediaplayer.onState', $item);
+        // Log ('Mediaplayer.onState', $item);
         $item.paused ? $item.mediaplayer.removeClass('playing') : $item.mediaplayer.addClass('playing');
         $item.buffering ? $item.mediaplayer.addClass('buffering') : $item.mediaplayer.removeClass('buffering');
     }
 
     function Init($callback) {
+        Log ('Mediaplayer.Init');
         $(".mediaplayer[data-init!='true']").each(function () {
             var mediaplayer = $(this);
             var item = {
                 vimeo: mediaplayer.attr('vimeo'),
                 youtube: mediaplayer.attr('youtube'),
-                source: mediaplayer.attr('source'),
+                mp4: mediaplayer.attr('mp4'),
+                mp3: mediaplayer.attr('mp3'),
                 poster: mediaplayer.attr('poster'),
                 controls: mediaplayer.attr('controls'),
+                fallback: mediaplayer.attr('fallback'),
                 crop: mediaplayer.hasClass('crop'),
                 circle: mediaplayer.hasClass('circle'),
+                hover: mediaplayer.hasClass('hover'),
                 mediaplayer: mediaplayer,
                 paused: true,
                 callback: $callback
             };
             item.onLoad = onLoad;
+            item.onError = onError;
+            item.onReady = onReady;
             item.onLoadProgress = onLoadProgress;
             item.onPlayProgress = onPlayProgress;
             item.onSeek = onSeek;
-            item.onReady = onReady;
             item.onLoadComplete = onLoadComplete;
             item.onEnded = onEnded;
             item.onState = onState;
@@ -830,16 +930,65 @@ var Mediaplayer = function () {
             }
 
             if (item.vimeo) {
-                mediaplayer.addClass('vimeo');
+                mediaplayer.addClass('vimeo video');
                 VideoVimeo.Load(item);
+
             } else if (item.youtube) {
-                mediaplayer.addClass('youtube');
+                mediaplayer.addClass('youtube video');
                 VideoYoutube.Load(item);
+
+            } else if (item.mp4) {
+                item.source = item.mp4;
+                
+                if (canPlayMp4()) {
+                    mediaplayer.addClass('html5 video');
+                    VideoHtml5.Load(item);
+
+                } else if (item.fallback) {
+                    mediaplayer.addClass('flash video');
+                    VideoFlash.Load(item);
+
+                }
+            } else if (item.mp3) {
+                item.source = item.mp3;
+
+                if (canPlayMp3()) {
+                    mediaplayer.addClass('html5 audio');
+                    AudioHtml5.Load(item);
+
+                } else if (item.fallback) {
+                    mediaplayer.addClass('flash audio');
+                    AudioFlash.Load(item);
+
+                }
             } else {
-                mediaplayer.addClass('html5');
-                VideoHtml5.Load(item);
+                onError(item);
+
             }
         });
+    }
+
+    function supportVideo() {
+        return !!document.createElement('video').canPlayType;
+    }
+    function supportAudio() {
+        return !!document.createElement('audio').canPlayType;
+    }
+    function canPlayMp4 () {
+        if (!supportVideo()) { 
+            return false; 
+        }
+        var v = document.createElement("video");
+        var canPlay = v.canPlayType('video/mp4; codecs="avc1.42E01E, mp4a.40.2"');
+        return (canPlay === 'probably' || canPlay === 'maybe');
+    }
+    function canPlayMp3 () {
+        if (!supportAudio()) { 
+            return false; 
+        }
+        var v = document.createElement("audio");
+        var canPlay = v.canPlayType('audio/mpeg');
+        return (canPlay === 'probably' || canPlay === 'maybe');
     }
 
     function Poster($item) {
@@ -849,7 +998,7 @@ var Mediaplayer = function () {
         img.onload = function () {
             $item.posterWidth = this.naturalWidth;
             $item.posterHeight = this.naturalHeight;
-            console.log('Mediaplayer.Poster', $item.posterWidth, $item.posterHeight);
+            Log('Mediaplayer.Poster', $item.posterWidth, $item.posterHeight);
             Resize($item);
         };
         img.onerror = function () {
@@ -863,7 +1012,7 @@ var Mediaplayer = function () {
         Resize();
     });
     function Resize($item) {
-        console.log('Mediaplayer.Resize');
+        Log('Mediaplayer.Resize');
         // var ww = win.width();
         // var wh = win.height();
         function resizeItem(item) {
@@ -872,7 +1021,7 @@ var Mediaplayer = function () {
             var vr = vw / vh;
             var ir = 16 / 9;
             var pr = ir;
-            console.log('Mediaplayer.resizeItem', item.posterWidth, item.videoWidth);
+            // Log('Mediaplayer.resizeItem', item.posterWidth, item.videoWidth);
             if (item.posterWidth) {
                 pr = item.posterWidth / item.posterHeight;
             }
@@ -885,7 +1034,7 @@ var Mediaplayer = function () {
             // CROP
             if (item.crop) {
                 if (item.circle) {
-                    vh = vw;
+                    vh = vw + d;
                     vr = 1;
                     item.mediaplayer.height(Math.round(vh));
                 }
@@ -908,24 +1057,24 @@ var Mediaplayer = function () {
                 pl = (vw - pw) / 2;
                 pt = (vh - ph) / 2;
             } else {
-                nw = vw;
+                nw = vw + d;
                 nh = vw / ir;
-                nl = 0;
-                nt = 0;
+                nl = - d / 2;
+                nt = - d / 2;
                 /*
                 if (item.vimeo || item.youtube) {
                     item.mediaplayer.height(Math.round(nh));
                 }
                 */
-                pw = vw;
+                pw = vw + d;
                 ph = vw / pr;
-                pl = 0;
-                pt = 0;
-                console.log('item.videoWidth', item.videoWidth);
+                pl = - d / 2;
+                pt = - d / 2;
+                Log('item.videoWidth', item.videoWidth);
                 if (item.videoWidth) {
                     item.mediaplayer.height(Math.round(nh));
                 } else if (item.posterWidth) {
-                    console.log('posterWidth', ph);
+                    Log('posterWidth', ph);
                     item.mediaplayer.height(Math.round(ph));
                 }
             }
@@ -969,14 +1118,20 @@ var Mediaplayer = function () {
             } else if (item.player) {
                 item.player.width = nw;
                 item.player.height = nh;
+                $(item.player).css({
+                    'width': nw + 'px',
+                    'height': nh + 'px',
+                    'left': nl + 'px',
+                    'top': nt + 'px'
+                });
             }
-            // console.log ('Mediaplayer.Resize', nw, nh);  
+            // Log ('Mediaplayer.Resize', nw, nh);  
         }
         if ($item) {
             return resizeItem($item);
         }
         $.each(items, function (i, item) {
-              resizeItem(item);          
+            resizeItem(item);          
         });
     }
 
@@ -992,7 +1147,7 @@ var Mediaplayer = function () {
     }
 
     function stopAll() {
-        // console.log ('Mediaplayer.stopAll', video);
+        // Log ('Mediaplayer.stopAll', video);
         for (var p in mediaplayers) {
             var item = mediaplayers[p];
             if (item.player && !item.paused) {
@@ -1001,10 +1156,10 @@ var Mediaplayer = function () {
         }
     }
     function togglePlay() {
-        // console.log ('Mediaplayer.togglePlay', video);
+        // Log ('Mediaplayer.togglePlay', video);
         var mediaplayer = getMediaplayer.call(this);
         var item = mediaplayers[mediaplayer.attr('id')];
-        // console.log(mediaplayer);
+        // Log(mediaplayer);
         if (item.player) {
             if (item.paused) {
                 stopAll ();
@@ -1017,7 +1172,7 @@ var Mediaplayer = function () {
     function Play() {
         var mediaplayer = getMediaplayer.call(this);
         var item = mediaplayers[mediaplayer.attr('id')];
-        // console.log(mediaplayer);
+        // Log(mediaplayer);
         if (item.player && item.paused) {
             stopAll ();
             item.Play();
@@ -1026,7 +1181,7 @@ var Mediaplayer = function () {
     function Pause() {
         var mediaplayer = getMediaplayer.call(this);
         var item = mediaplayers[mediaplayer.attr('id')];
-        // console.log(mediaplayer);
+        // Log(mediaplayer);
         if (item.player && !item.paused) {
             item.Stop();
         }
@@ -1034,18 +1189,30 @@ var Mediaplayer = function () {
     function Fullscreen() {
         var mediaplayer = getMediaplayer.call(this);
         var item = mediaplayers[mediaplayer.attr('id')];
-        // console.log(mediaplayer);
+        // Log(mediaplayer);
         if (item.player && !item.fullscreen) {
             item.fullscreen = true;
             mediaplayer.addClass('fullscreen');
             $('html').addClass('mediaplayer-fullscreen');
+            /*
+            var elem = mediaplayer[0];
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.msRequestFullscreen) {
+                elem.msRequestFullscreen();
+            } else if (elem.mozRequestFullScreen) {
+                elem.mozRequestFullScreen();
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+            }
+            */
             Resize(item);
         }
     }
     function Normal() {
         var mediaplayer = getMediaplayer.call(this);
         var item = mediaplayers[mediaplayer.attr('id')];
-        // console.log(mediaplayer);
+        // Log(mediaplayer);
         if (item.player && item.fullscreen) {
             item.fullscreen = false;
             mediaplayer.removeClass('fullscreen');
@@ -1074,7 +1241,7 @@ var Mediaplayer = function () {
     function Seek($pow) {
         var mediaplayer = getMediaplayer.call(this);
         var item = mediaplayers[mediaplayer.attr('id')];
-        // console.log(mediaplayer);
+        // Log(mediaplayer);
         if (item.player) {
             item.Seek($pow);
         }
@@ -1091,13 +1258,13 @@ var Mediaplayer = function () {
                 method: 'GET',
                 url: 'https://api-ssl.bitly.com/v3/user/link_save?access_token='+token+'&longUrl='+longUrl,
                 success: function($json) {
-                    console.log ('Mediaplayer.Share', $json);
+                    Log ('Mediaplayer.Share', $json);
                 }                
             })
         }
     }
     function Minimize() {
-        // console.log('Minimize');
+        // Log('Minimize');
         var mediaplayer = getMediaplayer.call(this);
         mediaplayer.removeClass('minimized');
         var item = mediaplayers[mediaplayer.attr('id')];
@@ -1141,7 +1308,7 @@ var Mediaplayer = function () {
                 var dx = item.scrubbing.current.x - item.scrubbing.start.x;
                 var x = Math.max(0, Math.min(tw, item.scrubbing.pos.left + dx));
                 mediaplayer.find('.scrub').css({'left':x+'px'});
-                console.log ('Mediaplayer.ScrubEnd', x, tw);
+                Log ('Mediaplayer.ScrubEnd', x, tw);
             
                 Seek.call(mediaplayer[0], x/tw);
                 item.scrubbing = null;
@@ -1185,9 +1352,23 @@ var Mediaplayer = function () {
         }
     }
 
-    $('body').on('click', '.mediaplayer .overlay, .mediaplayer .btn-play', function ($e) {
+    $('body').on('touchstart click', '.mediaplayer .overlay, .mediaplayer .btn-play', function ($e) {
         togglePlay.call(this);
         return false;
+    }).on('mouseover', '.mediaplayer .overlay', function ($e) {
+        if ($(this).closest('.mediaplayer').hasClass('hover')) {
+            Play.call(this);
+            return false;
+        } else {
+            return true;
+        }        
+    }).on('mouseout', '.mediaplayer .overlay', function ($e) {
+        if ($(this).closest('.mediaplayer').hasClass('hover')) {
+            Pause.call(this);
+            return false;
+        } else {
+            return true;
+        }        
     }).on('click', '.mediaplayer .play', function ($e) {
         Play.call(this);
         return false;
@@ -1250,7 +1431,7 @@ var Mediaplayer = function () {
     });
     
     function Query () {
-        console.log('Mediaplayer.Query');
+        Log('Mediaplayer.Query');
     }
 
     var Mediaplayer = {
@@ -1264,12 +1445,14 @@ var Mediaplayer = function () {
 
     Query ();
 
-    $(window).load(function () {
+    setTimeout (function() {
+
         Mediaplayer.Init(function () {
-            console.log('Mediaplayer.Init.callback');
+            Log('Mediaplayer.Init.callback');
             // Columnzr.Recol.call(link.closest('.items')[0]);
         });
-    });
+
+    }, 500);
 
     return Mediaplayer;
 
