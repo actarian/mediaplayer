@@ -4,39 +4,47 @@ M E D I A P L A Y E R
 
 var Mediaplayer = function () {
 
-    var qso = function () {
-        function parseQSO (qs) {
-            var qso = new Object ();
-            if (!qs) return qso; // return empty object
-            var pairs = qs.split(/[;&]/);
-            for (var i = 0; i < pairs.length; i++) {
-                var kv = pairs[i].split('=');
-                if (!kv || kv.length != 2) continue;
-                var key = unescape(kv[0]);
-                var val = unescape(kv[1]);
-                val = val.replace(/\+/g, ' ');
-                qso[key] = val;
-            }
-            return qso;
-        }
-        var scripts = document.getElementsByTagName('script');
-        var script = scripts[scripts.length-1];
-        var qs = script.src.replace(/^[^\?]+\??/,'');
-        var qso = parseQSO(qs);
-        console.log ('Mediaplayer.parseQSO', script.src, qso);
-        return qso;
-    }();
-
-    if (Mediaplayer) {
-        Mediaplayer.Query ();
-        return Mediaplayer;
-    }
-
     /********************************
     S U B C L A S S E S 
     ********************************/
 
     var DEBUG = true;
+
+    /********************************
+    Javascript QueryString
+    ********************************/
+
+    var qso = function () {
+        var scripts = document.getElementsByTagName('script');
+        var script = scripts[scripts.length-1];
+        return {
+            'shortUrl': script.src,
+            'script':   script
+        };
+    }();
+    if (qso.shortUrl.indexOf('?') != -1 || qso.shortUrl.indexOf('bit.ly') != -1) {
+        console.log ('Mediaplayer.qso.shortUrl', qso.shortUrl);
+    }
+
+    /********************************
+    Prevent Double Initialization
+    ********************************/
+
+    if (window['Mediaplayer']) {        
+        var Mediaplayer = window['Mediaplayer'];
+        if (qso.shortUrl.indexOf('?') != -1 || qso.shortUrl.indexOf('bit.ly') != -1) {
+            var query = qso;
+            function tryQuery () {
+                if (window['$']) {
+                    Mediaplayer.Query (query);
+                } else {
+                    setTimeout(tryQuery ,100);
+                }
+            }
+            tryQuery ();
+        }
+        return Mediaplayer;
+    }
 
     /********************************
     Log
@@ -50,6 +58,76 @@ var Mediaplayer = function () {
             Console = {log: function(){}};
         }
         return Console;
+    }();
+
+    /********************************
+    Bitly
+    ********************************/
+
+    var Bitly = function () {
+
+        var USE_BITLY = true,
+        BITLY_TOKEN =   '52de26c95a1edeb7f26eace81df6f2c991cc6a22',
+        BITLY_SAVE =    'https://api-ssl.bitly.com/v3/user/link_save?access_token=##access_token##&longUrl=##longUrl##',
+        BITLY_EXPAND =  'https://api-ssl.bitly.com/v3/expand?access_token=##access_token##&shortUrl=##shortUrl##';
+        
+        function Save ($longUrl, $success, $error) {
+            var shortUrl = $longUrl;
+            if (USE_BITLY) {
+                $.ajax({
+                    dataType: "json",
+                    method: 'GET',
+                    url: BITLY_SAVE.split('##access_token##').join(BITLY_TOKEN).split('##longUrl##').join($longUrl),
+                    success: function($json) {
+                        if ($json.data && $json.data.link_save && $json.data.link_save.link) {
+                            shortUrl = $json.data.link_save.link;
+                            // Console.log ('Bitly.Save', $longUrl, shortUrl);
+                            $success ? $success (shortUrl) : null;
+                        } else {
+                            $error ? $error (shortUrl) : null;
+                        }   
+                    },
+                    error: function() {
+                        $error ? $error (shortUrl) : null;
+                    }            
+                });
+            } else {
+                $success ? $success (shortUrl) : null;
+            } 
+        }
+
+        function Expand ($shortUrl, $success, $error) {
+            var longUrl = $shortUrl;
+            if (USE_BITLY && $shortUrl.indexOf('bit.ly') != -1) {
+                $.ajax({
+                    dataType: "json",
+                    method: 'GET',
+                    url: BITLY_EXPAND.split('##access_token##').join(BITLY_TOKEN).split('##shortUrl##').join($shortUrl),
+                    success: function($json) {
+                        Console.log ('Bitly.Expand', $json);
+                        if ($json.data && $json.data.expand && $json.data.expand.length == 1 && $json.data.expand[0].long_url) {
+                            longUrl = $json.data.expand[0].long_url;
+                            Console.log ('Bitly.Expand', $shortUrl, longUrl);
+                            $success ? $success (longUrl) : null;
+                        } else {
+                            $error ? $error (longUrl) : null;
+                        }   
+                    },
+                    error: function() {
+                        $error ? $error (longUrl) : null;
+                    }            
+                });
+            } else {
+                $success ? $success (longUrl) : null;
+            } 
+        }
+
+        var Bitly = {};
+
+        Bitly.Save = Save;
+        Bitly.Expand = Expand;
+
+        return Bitly;
     }();
 
     /********************************
@@ -1131,100 +1209,107 @@ var Mediaplayer = function () {
         $item.buffering ? $item.mediaplayer.addClass('buffering') : $item.mediaplayer.removeClass('buffering');
     }
 
-    function Init($callback) {
-        // Console.log ('Mediaplayer.Init');
-        $(".mediaplayer[data-init!='true']").each(function () {
-            var mediaplayer = $(this);
-            var item = {
-                vimeo: mediaplayer.attr('vimeo'),
-                youtube: mediaplayer.attr('youtube'),
-                mp4: mediaplayer.attr('mp4'),
-                mp3: mediaplayer.attr('mp3'),
-                poster: mediaplayer.attr('poster'),
-                controls: mediaplayer.attr('controls'),
-                fallback: mediaplayer.attr('fallback'),
-                crop: mediaplayer.hasClass('crop'),
-                square: mediaplayer.hasClass('square'),
-                circle: mediaplayer.hasClass('circle'),
-                hover: mediaplayer.hasClass('hover'),
-                mediaplayer: mediaplayer,
-                paused: true,
-                callback: $callback
-            };
-            item.onLoad = onLoad;
-            item.onError = onError;
-            item.onReady = onReady;
-            item.onLoadProgress = onLoadProgress;
-            item.onPlayProgress = onPlayProgress;
-            item.onSeek = onSeek;
-            item.onLoadComplete = onLoadComplete;
-            item.onEnded = onEnded;
-            item.onState = onState;
-            items.push(item);
+    function InitMediaplayer($callback) {
+        var mediaplayer = $(this);
+        var id = 'mediaplayer-' + items.length;
+        mediaplayer.attr({ 'data-init': 'true', 'id': id });
 
-            var id = 'mediaplayer-' + items.length;
-            mediaplayers[id] = item;
-            mediaplayer.attr({ 'data-init': 'true', 'id': id });
+        var item = {
+            vimeo: mediaplayer.attr('vimeo'),
+            youtube: mediaplayer.attr('youtube'),
+            mp4: mediaplayer.attr('mp4'),
+            mp3: mediaplayer.attr('mp3'),
+            poster: mediaplayer.attr('poster'),
+            controls: mediaplayer.attr('controls'),
+            fallback: mediaplayer.attr('fallback'),
+            autoplay: mediaplayer.attr('autoplay'),
+            loop: mediaplayer.attr('loop'),
+            crop: mediaplayer.hasClass('crop'),
+            square: mediaplayer.hasClass('square'),
+            circle: mediaplayer.hasClass('circle'),
+            hover: mediaplayer.hasClass('hover'),
+            mediaplayer: mediaplayer,
+            paused: true,
+            callback: $callback
+        };
+        item.onLoad = onLoad;
+        item.onError = onError;
+        item.onReady = onReady;
+        item.onLoadProgress = onLoadProgress;
+        item.onPlayProgress = onPlayProgress;
+        item.onSeek = onSeek;
+        item.onLoadComplete = onLoadComplete;
+        item.onEnded = onEnded;
+        item.onState = onState;
+        items.push(item);
+        mediaplayers[id] = item;
+        
+        item.controls = item.controls !== undefined ? true : false;
+        item.fallback = item.fallback !== undefined ? true : false;
+        item.autoplay = item.autoplay !== undefined ? true : false;
+        item.loop = item.loop !== undefined ? true : false;
 
-            item.controls = item.controls != undefined ? true : false;
-            item.fallback = item.fallback != undefined ? true : false;
+        if (item.overlay !== 'false') {
+            var overlay = Skin.overlay();
+            overlay.appendTo(mediaplayer);
+            item.overlay = overlay;
+        }
+        if (item.controls) {
+            var controls = Skin.controls();
+            controls.appendTo(mediaplayer);
+            item.controls = controls;
+        }
+        if (item.poster) {
+            Poster(item);
+        }
 
-            if (item.overlay !== 'false') {
-                var overlay = Skin.overlay();
-                overlay.appendTo(mediaplayer);
-                item.overlay = overlay;
-            }
-            if (item.controls) {
-                var controls = Skin.controls();
-                controls.appendTo(mediaplayer);
-                item.controls = controls;
-            }
-            if (item.poster) {
-                Poster(item);
-            }
+        if (item.vimeo) {
+            mediaplayer.addClass('vimeo video');
+            VideoVimeo.Load(item);
 
-            if (item.vimeo) {
-                mediaplayer.addClass('vimeo video');
-                VideoVimeo.Load(item);
+        } else if (item.youtube) {
+            mediaplayer.addClass('youtube video');
+            VideoYoutube.Load(item);
 
-            } else if (item.youtube) {
-                mediaplayer.addClass('youtube video');
-                VideoYoutube.Load(item);
+        } else if (item.mp4) {
+            item.source = item.mp4;
+                
+            if (canPlayMp4()) {
+                mediaplayer.addClass('html5 video');
+                VideoHtml5.Load(item);
 
-            } else if (item.mp4) {
-                item.source = item.mp4;
-                    
-                if (canPlayMp4()) {
-                    mediaplayer.addClass('html5 video');
-                    VideoHtml5.Load(item);
+            } else if (item.fallback) {
+                mediaplayer.addClass('flash video');
+                VideoFlash.Load(item);
 
-                } else if (item.fallback) {
-                    mediaplayer.addClass('flash video');
-                    VideoFlash.Load(item);
-
-                } else {
-                    onError(item);
-
-                }
-            } else if (item.mp3) {
-                item.source = item.mp3;
-
-                if (canPlayMp3()) {
-                    mediaplayer.addClass('html5 audio');
-                    AudioHtml5.Load(item);
-
-                } else if (item.fallback) {
-                    mediaplayer.addClass('flash audio');
-                    AudioFlash.Load(item);
-
-                } else {
-                    onError(item);
-
-                }
             } else {
                 onError(item);
 
             }
+        } else if (item.mp3) {
+            item.source = item.mp3;
+
+            if (canPlayMp3()) {
+                mediaplayer.addClass('html5 audio');
+                AudioHtml5.Load(item);
+
+            } else if (item.fallback) {
+                mediaplayer.addClass('flash audio');
+                AudioFlash.Load(item);
+
+            } else {
+                onError(item);
+
+            }
+        } else {
+            onError(item);
+
+        }
+    }
+    function Init($callback) {
+        // Console.log ('Mediaplayer.Init');
+        $(".mediaplayer[data-init!='true']").each(function () {
+            InitMediaplayer.call(this);
         });
     }
 
@@ -1267,10 +1352,6 @@ var Mediaplayer = function () {
         $item.mediaplayer.addClass('poster');
     }
 
-    win = $(window);
-    win.on('resize', function () {
-        Resize();
-    });
     function Resize($item) {
         // Console.log('Mediaplayer.Resize');
         // var ww = win.width();
@@ -1298,7 +1379,7 @@ var Mediaplayer = function () {
                     vr = 1;
                     item.mediaplayer.height(Math.round(vh));
                 }
-                console.log(vw,vh,ir,vr);
+                // console.log(vw,vh,ir,vr);
                 if (ir > vr) {
                     nh = vh + d;
                     nw = nh * ir;
@@ -1396,6 +1477,11 @@ var Mediaplayer = function () {
         });
     }
 
+    function Load() {
+        if (video) {
+            video.load();
+        }
+    }
     function Clear() {
         // youtube player.destroy()
         /*
@@ -1405,8 +1491,12 @@ var Mediaplayer = function () {
             videoPlayer.remove();
         }
         */
+    }function Load() {
+        if (video) {
+            video.load();
+        }
     }
-
+    
     function stopAll() {
         // Console.log ('Mediaplayer.stopAll', video);
         for (var p in mediaplayers) {
@@ -1507,23 +1597,6 @@ var Mediaplayer = function () {
             item.Seek($pow);
         }
     }
-    function Share() {
-        var mediaplayer = getMediaplayer.call(this);
-        var item = mediaplayers[mediaplayer.attr('id')];
-        if (item.player) {
-            alert('Share ' + item.id);
-            var token = '52de26c95a1edeb7f26eace81df6f2c991cc6a22';
-            var longUrl = escape('http://extranet.wslabs.it/ios/kemon/public/');
-            $.ajax({
-                dataType: "json",
-                method: 'GET',
-                url: 'https://api-ssl.bitly.com/v3/user/link_save?access_token='+token+'&longUrl='+longUrl,
-                success: function($json) {
-                    Console.log ('Mediaplayer.Share', $json);
-                }                
-            })
-        }
-    }
     function Minimize() {
         // Console.log('Minimize');
         var mediaplayer = getMediaplayer.call(this);
@@ -1589,6 +1662,27 @@ var Mediaplayer = function () {
             item.scrubbing = null;
         }
     }
+    function Share() {
+        var mediaplayer = getMediaplayer.call(this);
+        var item = mediaplayers[mediaplayer.attr('id')];
+        var data = Enquery.call(this);
+        if (data.script && qso.shortUrl && qso.shortUrl.indexOf('/mediaplayer.js') != -1) {
+            var parameters = '';
+            for (var p in data) {
+                if (p != 'script') {
+                    parameters += '&' + p + '=' + data[p];
+                }
+            }
+            parameters = parameters.split('&');
+            parameters.shift();
+            parameters = parameters.join('&');
+            var longUrl = escape(qso.shortUrl.split('/mediaplayer.js')[0] + '/mediaplayer.js?' + parameters);
+            Bitly.Save(longUrl, function($shortUrl) {
+                var scriptHtml = '<script type="text/javascript" src="' + $shortUrl + '"></script>';
+                Console.log ('Mediaplayer.Share.makeScript', scriptHtml, $shortUrl);
+            });
+        }
+    }
     function getMediaplayer() {
         var mediaplayer = $(this);
         if (mediaplayer.hasClass('mediaplayer')) {
@@ -1607,92 +1701,133 @@ var Mediaplayer = function () {
         }
         return mediaplayer;
     }
-    function Load() {
-        if (video) {
-            video.load();
+    function Enquery () {
+        Console.log('Mediaplayer.Enquery');
+        var mediaplayer = getMediaplayer.call(this);
+        var item = mediaplayers[mediaplayer.attr('id')];
+        var qso = {}
+        if (item.player) {
+            var classes = mediaplayer.attr('class').split(' ');
+            var attributes = {};
+            $(mediaplayer[0].attributes).each(function() {
+                attributes[this.nodeName] = this.nodeValue;
+            });
+            $.each(classes, function($i,$v) {
+                switch($v) {
+                    case 'square':
+                    case 'circle':
+                    case 'crop':
+                    case 'hover':
+                        qso[$v] = 'true';
+                    break;
+                }
+            });
+            for (var p in attributes) {
+                switch(p) {
+                    case 'mp4':
+                    case 'youtube':
+                    case 'vimeo':
+                    case 'poster':
+                        qso[p] = attributes[p];
+                    break;
+                    case 'fallback':
+                    case 'controls':
+                    case 'autoplay':
+                    case 'loop':
+                        qso[p] = 'true';
+                    break;
+                }
+            }
+            qso.script = true;
+        }
+        return qso;
+        var qso = Enquery.call(this);        
+            if (qso.script) {
+            var mediaplayer = $('<div class="mediaplayer"></div>');
+            for (var p in qso) {
+                switch(p) {
+                    case 'script':
+                    break;
+                    case 'circle':
+                    case 'square':
+                    case 'crop':
+                    case 'hover':
+                        qso[p] === 'true' ? mediaplayer.addClass(p) : null;
+                    break;
+                    default:
+                        mediaplayer.attr(p, qso[p]);
+                }
+            }
+            mediaplayer.insertAfter($(qso.script));
         }
     }
 
-    $('body').on('touchstart click', '.mediaplayer .overlay, .mediaplayer .btn-play', function ($e) {
-        togglePlay.call(this);
-        return false;
-    }).on('mouseover', '.mediaplayer .overlay', function ($e) {
-        if ($(this).closest('.mediaplayer').hasClass('hover')) {
-            Play.call(this);
-            return false;
-        } else {
-            return true;
-        }        
-    }).on('mouseout', '.mediaplayer .overlay', function ($e) {
-        if ($(this).closest('.mediaplayer').hasClass('hover')) {
-            Pause.call(this);
-            return false;
-        } else {
-            return true;
-        }        
-    }).on('click', '.mediaplayer .play', function ($e) {
-        Play.call(this);
-        return false;
-    }).on('click', '.mediaplayer .pause', function ($e) {
-        Pause.call(this);
-        return false;
-    }).on('click', '.mediaplayer .fullscreen', function ($e) {
-        Fullscreen.call(this);
-        return false;
-    }).on('click', '.mediaplayer .normal', function ($e) {
-        Normal.call(this);
-        return false;
-    }).on('click', '.mediaplayer .audio-on', function ($e) {
-        Mute.call(this);
-        return false;
-    }).on('click', '.mediaplayer .audio-off', function ($e) {
-        UnMute.call(this);
-        return false;
-    }).on('click', '.mediaplayer .share', function ($e) {
-        Share.call(this);
-        return false;
-    }).on('mousedown', '.mediaplayer .scrub', function ($e) {
-        ScrubStart.call(this, {x:$e.clientX, y:$e.clientY});
-        return false;
-    }).on('mousemove mousedown touchstart', '.mediaplayer', function ($e) {
-        Minimize.call(this);
-        return true;
-    }).on('mousemove', function ($e) {
-        ScrubMove({x:$e.clientX, y:$e.clientY});
-        return true;
-    }).on('mouseup', function ($e) {
-        ScrubEnd({x:$e.clientX, y:$e.clientY});
-        return true;
-    }).on('touchstart', '.mediaplayer .scrub', function ($e) {
-        var e = $e.originalEvent;
-        var startX = e.touches[0].pageX;
-        var startY = e.touches[0].pageY;
-        ScrubStart.call(this, {x:startX, y:startY});
-        return false;
-    }).on('touchmove', function ($e) {
-        var e = $e.originalEvent;
-        var startX = e.touches[0].pageX;
-        var startY = e.touches[0].pageY;
-        var curX = e.targetTouches[0].pageX;
-        var curY = e.targetTouches[0].pageY;
-        ScrubMove({x:curX, y:curY});
-        return true;
-    }).on('touchend', function ($e) {
-        ScrubEnd({x:0, y:0});
-        return true;
-    }).on('mouseup', '.mediaplayer .track', function ($e) {
-        Track.call(this, {x:$e.clientX, y:$e.clientY});
-        return true;
-    }).on('touchstart', '.mediaplayer .track', function ($e) {
-        var e = $e.originalEvent;
-        var startX = e.touches[0].pageX;
-        var startY = e.touches[0].pageY;
-        Track.call(this, {x:startX, y:startY});
-        return false;
-    });
-    
-    function Query () {
-        Console.log('Mediaplayer.Query', qso, qso.length);
+    function Query ($query) {
+        if ($query) {
+            Console.log('Mediaplayer.Query', $query.shortUrl, $query.script);
+            var query = $query;
+            if (query.script) {
+                var script = query.script;
+                var shortUrl = query.shortUrl, longUrl = shortUrl;
+                // Console.log('Mediaplayer.Query', shortUrl);
+                function parseQSO (qs) {
+                    var query = {};
+                    if (!qs) return query;
+                    // Console.log('Mediaplayer.parseQSO', qs);
+                    var pairs = qs.split(/[;&]/);
+                    for (var i = 0; i < pairs.length; i++) {
+                        var kv = pairs[i].split('=');
+                        if (!kv || kv.length != 2) continue;
+                        var key = unescape(kv[0]);
+                        var val = unescape(kv[1]);
+                        val = val.replace(/\+/g, ' ');
+                        query[key] = val;
+                    }
+                    return query;
+                }
+                function parseQS ($longUrl) {
+                    var qs = $longUrl.replace(/^[^\?]+\??/,'');
+                    var query = parseQSO(qs);
+                    query.script = script;
+                    var mediaplayer = $('<div class="mediaplayer"></div>'), hasAttributes = false;
+                    for (var p in query) {
+                        switch(p) {
+                            case 'script':
+                            break;
+                            case 'circle':
+                            case 'square':
+                            case 'crop':
+                            case 'hover':
+                                if (query[p] === 'true') {
+                                    mediaplayer.addClass(p);
+                                }
+                            break;
+                            case 'mp4':
+                            case 'vimeo':
+                            case 'youtube':
+                            case 'poster':
+                            case 'controls':
+                            case 'fallback':
+                            case 'autoplay':
+                            case 'loop':
+                                mediaplayer.attr(p, query[p]);
+                                hasAttributes = true;
+                            break;
+                        }
+                    }
+                    if (hasAttributes) {
+                        mediaplayer.insertAfter($(query.script));
+                        Console.log ('Mediaplayer.EmbedObject', mediaplayer);                
+                        InitMediaplayer.call(mediaplayer[0]);
+                    } else {
+                        Console.log ('Mediaplayer.EmbedObject', $longUrl, mediaplayer, hasAttributes);                
+                    }                        
+                }
+                Bitly.Expand(shortUrl, function($longUrl) {
+                    parseQS ($longUrl);
+                });
+            }        
+        }
     }
 
     function Api () {
@@ -1704,19 +1839,113 @@ var Mediaplayer = function () {
 
     Mediaplayer.mediaplayers = mediaplayers;
     Mediaplayer.Init = Init;
+    Mediaplayer.InitMediaplayer = InitMediaplayer;
     Mediaplayer.Clear = Clear;
     Mediaplayer.togglePlay = togglePlay;
     Mediaplayer.Query = Query;
     Mediaplayer.Api = Api;
 
-    Query ();
+    function Initialize () {
+        if (window['$']) {
 
-    setTimeout (function() {
-        Mediaplayer.Init(function () {
-            Console.log('Mediaplayer.Init.callback');
-            // Columnzr.Recol.call(link.closest('.items')[0]);
-        });
-    }, 500);
+            Mediaplayer.Init(function () {
+                Console.log('Mediaplayer.Init.callback');
+            });
+
+            if (qso.shortUrl.indexOf('?') != -1 || qso.shortUrl.indexOf('bit.ly') != -1) {
+                Query (qso);
+            }
+
+            win = $(window);
+            win.on('resize', function () {
+                Resize();
+            });
+
+            $('body').on('touchstart click', '.mediaplayer .overlay, .mediaplayer .btn-play', function ($e) {
+                togglePlay.call(this);
+                return false;
+            }).on('mouseover', '.mediaplayer .overlay', function ($e) {
+                if ($(this).closest('.mediaplayer').hasClass('hover')) {
+                    Play.call(this);
+                    return false;
+                } else {
+                    return true;
+                }        
+            }).on('mouseout', '.mediaplayer .overlay', function ($e) {
+                if ($(this).closest('.mediaplayer').hasClass('hover')) {
+                    Pause.call(this);
+                    return false;
+                } else {
+                    return true;
+                }        
+            }).on('click', '.mediaplayer .play', function ($e) {
+                Play.call(this);
+                return false;
+            }).on('click', '.mediaplayer .pause', function ($e) {
+                Pause.call(this);
+                return false;
+            }).on('click', '.mediaplayer .fullscreen', function ($e) {
+                Fullscreen.call(this);
+                return false;
+            }).on('click', '.mediaplayer .normal', function ($e) {
+                Normal.call(this);
+                return false;
+            }).on('click', '.mediaplayer .audio-on', function ($e) {
+                Mute.call(this);
+                return false;
+            }).on('click', '.mediaplayer .audio-off', function ($e) {
+                UnMute.call(this);
+                return false;
+            }).on('click', '.mediaplayer .share', function ($e) {
+                Share.call(this);
+                return false;
+            }).on('mousedown', '.mediaplayer .scrub', function ($e) {
+                ScrubStart.call(this, {x:$e.clientX, y:$e.clientY});
+                return false;
+            }).on('mousemove mousedown touchstart', '.mediaplayer', function ($e) {
+                Minimize.call(this);
+                return true;
+            }).on('mousemove', function ($e) {
+                ScrubMove({x:$e.clientX, y:$e.clientY});
+                return true;
+            }).on('mouseup', function ($e) {
+                ScrubEnd({x:$e.clientX, y:$e.clientY});
+                return true;
+            }).on('touchstart', '.mediaplayer .scrub', function ($e) {
+                var e = $e.originalEvent;
+                var startX = e.touches[0].pageX;
+                var startY = e.touches[0].pageY;
+                ScrubStart.call(this, {x:startX, y:startY});
+                return false;
+            }).on('touchmove', function ($e) {
+                var e = $e.originalEvent;
+                var startX = e.touches[0].pageX;
+                var startY = e.touches[0].pageY;
+                var curX = e.targetTouches[0].pageX;
+                var curY = e.targetTouches[0].pageY;
+                ScrubMove({x:curX, y:curY});
+                return true;
+            }).on('touchend', function ($e) {
+                ScrubEnd({x:0, y:0});
+                return true;
+            }).on('mouseup', '.mediaplayer .track', function ($e) {
+                Track.call(this, {x:$e.clientX, y:$e.clientY});
+                return true;
+            }).on('touchstart', '.mediaplayer .track', function ($e) {
+                var e = $e.originalEvent;
+                var startX = e.touches[0].pageX;
+                var startY = e.touches[0].pageY;
+                Track.call(this, {x:startX, y:startY});
+                return false;
+            });
+
+        } else {
+            setTimeout (Initialize, 100);
+
+        }
+    }
+
+    Initialize ();
 
     return Mediaplayer;
 
