@@ -21,12 +21,12 @@ body {
 .mediaplayer object, 
 .mediaplayer iframe, 
 .mediaplayer, 
-.mediaplayer & > .overlay, 
-.mediaplayer & > .overlay & > .poster, 
-.mediaplayer & > .youtubeplayer, 
-.mediaplayer & > .vimeoplayer, 
-.mediaplayer & > .html5player, 
-.mediaplayer & > .flashplayer {
+.mediaplayer > .overlay, 
+.mediaplayer > .overlay > .poster, 
+.mediaplayer > .youtubeplayer, 
+.mediaplayer > .vimeoplayer, 
+.mediaplayer > .html5player, 
+.mediaplayer > .flashplayer {
     position: relative;
     display: block;
     width: 100%;
@@ -39,12 +39,14 @@ body {
     padding: 0;
     width: 100%;
     height: auto;
-    /* border-radius: 6px; */
+    border-radius: 12px;
     cursor: pointer;
-    overflow: hidden;
     /* .setTransition(height); */
-
-    .useHardware(); 
+    overflow: hidden;
+    .useHardware();
+    iframe, video, object, embed, .controls, .overlay, .poster, .timeline, .track, .progress, .buffer, .btn-play {
+        .useHardware();
+    }
     > .overlay {
         position: absolute;
         top: 0;
@@ -76,10 +78,6 @@ body {
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
-        .playpause {
-            font-family: 'mediaplayer';
-            content: '\e600'
-        }
         .timeline {
             position: relative;
             width: 99%;
@@ -89,17 +87,15 @@ body {
                 position: relative;
                 width: 100%;
                 height: 10px;
-                border-radius: 5px;
+                border-radius: 4px;
                 overflow: hidden;
                 background: darken(@back, 5%);
-                .useHardware(); 
                 .progress, .buffer {
                     display:block;
                     position:absolute;
                     left: 0;
                     width: 0;
-                    height: 100%;
-                    .useHardware();                     
+                    height: 100%;                   
                 }
                 .progress {
                     background: lighten(@fore, 10%);
@@ -262,9 +258,6 @@ body {
                 display: table-cell;
             }
         }
-    }
-    iframe, video, object, .overlay {
-        .useHardware();
     }
     &.youtube {
         iframe {

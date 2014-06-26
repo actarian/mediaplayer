@@ -525,12 +525,20 @@ module.exports = function(grunt) {
 			}
 		},
 		uglify: {
-			build: {
+			production: {
 				options: {
 					mangle: false
 				},
 				files: {
 					'dist/js/main.min.js': ['dist/js/**/*.js', '!dist/js/**/jquery*.js', '!dist/js/**/modernizr*.js', '!dist/js/**/ua.js', '!dist/js/main.js', 'dist/js/main.js' ]
+				}
+			},
+			mediaplayer: {
+				options: {
+					mangle: true
+				},
+				files: {
+					'dist/js/mediaplayer.min.js': ['dist/js/mediaplayer.js']
 				}
 			}
 		},
@@ -671,7 +679,7 @@ module.exports = function(grunt) {
 
 	grunt.registerTask(
 		'dojs',
-		[ 'clean:js', 'copy:js', 'modernizr:development'/*, 'jshint:development'*/ ]
+		[ 'clean:js', 'copy:js', 'modernizr:development', 'uglify:mediaplayer'/*, 'jshint:development'*/ ]
 	);
 
 	grunt.registerTask(
@@ -691,12 +699,12 @@ module.exports = function(grunt) {
 
 	grunt.registerTask(
 		'development',
-		[ 'clean:all', 'docopyDevelopment', 'lessbootstrap', 'less:development', 'less:mediaplayer'/*, 'csslint'*/, 'stencil:development', 'devcode:development', 'prettify', 'modernizr:development'/*, 'jshint:development'*/, 'connect:server', 'browser', 'watch' ]
+		[ 'clean:all', 'docopyDevelopment', 'lessbootstrap', 'less:development', 'less:mediaplayer'/*, 'csslint'*/, 'stencil:development', 'devcode:development', 'prettify', 'modernizr:development', 'uglify:mediaplayer'/*, 'jshint:development'*/, 'connect:server', 'browser', 'watch' ]
 	);
 
 	grunt.registerTask(
 		'production',
-		[ 'clean:all', 'docopyProduction', 'lessbootstrap', 'less:development', 'less:mediaplayer', 'cssmin', 'clean:removeUnusedCss', 'uglify', 'clean:removeUnusedJs', 'stencil:production', 'devcode:production', 'prettify', 'modernizr:production'/*, 'jshint:production'*/, 'connect:server', 'browser', 'watch' ]
+		[ 'clean:all', 'docopyProduction', 'lessbootstrap', 'less:development', 'less:mediaplayer', 'cssmin', 'clean:removeUnusedCss', 'uglify:production', 'uglify:mediaplayer', 'clean:removeUnusedJs', 'stencil:production', 'devcode:production', 'prettify', 'modernizr:production'/*, 'jshint:production'*/, 'connect:server', 'browser', 'watch' ]
 	);
 
 	grunt.registerTask('help', 'List of all available commands.', function(arg) {
