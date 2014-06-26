@@ -8,7 +8,7 @@ var Mediaplayer = function () {
     S U B C L A S S E S 
     ********************************/
 
-    var DEBUG = true;
+    var DEBUG = true, MEDIAPLAYER_FLASH = 'swf/mediaplayer.swf';
 
     /********************************
     Javascript QueryString
@@ -167,6 +167,51 @@ var Mediaplayer = function () {
             return $(html);
         };
         Skin.flash = function ($data) {
+            var html = '<object id="object-##video_id##" classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" codebase="http://fpdownload.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=10,0,0,0">';
+            html += '    <param name="flashvars" value="video=##url##&loop=##loop##&autoplay=##autoplay##" />';
+            html += '    <param name="allowScriptAccess" value="sameDomain" />';
+            html += '    <param name="movie" value="##mediaplayerUrl##" />';
+            html += '    <param name="menu" value="false" />';
+            html += '    <param name="quality" value="high" />';
+            html += '    <param name="scale" value="noscale" />';
+            html += '    <param name="salign" value="lt" />';
+            html += '    <param name="wmode" value="gpu" />';
+            html += '    <param name="bgcolor" value="#000000" />';
+            html += '    <embed src="##mediaplayerUrl##" id="embed-##video_id##" name="embed-##video_id##" flashVars="video=##url##&loop=##loop##&autoplay=##autoplay##" menu="false" quality="high" scale="noscale" wmode="gpu" bgcolor="#000000" swLiveConnect=true allowScriptAccess="sameDomain" type="application/x-shockwave-flash" pluginspage="http://www.adobe.com/go/getflashplayer" />';
+            html += '</object>';
+
+            /*
+            var html = '<object id="##video_id##" name="##video_id##" classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" type="application/x-shockwave-flash" data="##mediaplayerUrl##">';
+            html += '   <param name="movie" value="##mediaplayerUrl##" />';
+            html += '   <param name="allowscriptaccess" value="always">';
+            html += '   <param name="quality" value="high">';
+            html += '   <param name="bgcolor" value="#000000">';
+            html += '   <param name="wmode" value="opaque">';
+            html += '   <param name="swfversion" value="10.1">';
+            html += '   <param name="flashvars" value="video=##url##&loop=##loop##&autoplay=##autoplay##">';
+            html += '</object>';
+            */
+            /*
+            var html = '<object id="##video_id##" classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000">';
+            html += '   <param name="movie" value="##mediaplayerUrl##" />';
+            html += '   <param name="allowscriptaccess" value="always">';
+            html += '   <param name="quality" value="high">';
+            html += '   <param name="bgcolor" value="#000000">';
+            html += '   <param name="wmode" value="opaque">';
+            html += '   <param name="swfversion" value="10.1">';
+            html += '   <param name="flashvars" value="video=##url##&loop=##loop##&autoplay=##autoplay##">';
+            html += '   <object name="##video_id##" type="application/x-shockwave-flash" data="##mediaplayerUrl##">';
+            html += '       <param name="movie" value="##mediaplayerUrl##" />';
+            html += '       <param name="allowscriptaccess" value="always">';
+            html += '       <param name="quality" value="high">';
+            html += '       <param name="bgcolor" value="#000000">';
+            html += '       <param name="wmode" value="opaque">';
+            html += '       <param name="swfversion" value="10.1">';
+            html += '       <param name="flashvars" value="video=##url##&loop=##loop##&autoplay=##autoplay##">';
+            html += '   </object>';
+            html += '</object>';
+            */
+            /*
             var html = '<object id="##video_id##" name="##video_id##" class="flashplayer" type="application/x-shockwave-flash" classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000">';
             html += '   <param name="movie" value="swf/mediaplayer.swf">';
             html += '   <param name="allowscriptaccess" value="always">';
@@ -176,6 +221,7 @@ var Mediaplayer = function () {
             html += '   <param name="swfversion" value="10.1">';
             html += '   <param name="flashvars" value="video=##url##&loop=##loop##&autoplay=##autoplay##">';
             html += '</object>';
+            */
             for (var p in $data) {
                 html = html.split('##'+p+'##').join($data[p]);
             }
@@ -421,6 +467,89 @@ var Mediaplayer = function () {
             return maxBuffer;
         }
 
+        function onPlayerReady ($id) {
+            var player = this;
+            var item = players[$id.split('embed-').join('').split('object-').join('')];
+            item.player = player;
+            item.Play = function () {
+                Console.log ('VideoFlash.item.Play', player);
+                player.videoPlay();
+            };
+            item.Stop = function () {
+                player.videoPause();
+            };
+            item.Mute = function () {
+                player.videoMute(true);
+            };
+            item.UnMute = function () {
+                player.videoMute(false);
+            };
+            item.Seek = function ($pow) {
+                player.videoSeek($pow * this.duration);
+            };
+            Console.log ('VideoFlash.onPlayerReady', item);
+        }
+        function onStreamStarted($id) {
+            var item = players[$id.split('embed-').join('').split('object-').join('')];
+            var player = item.player;
+            // Console.log ('VideoFlash.onStreamStarted', item);
+            item.onLoad ? item.onLoad(item) : null;
+        }
+       function onStreamEnded($id) {
+            var item = players[$id.split('embed-').join('').split('object-').join('')];
+            var player = item.player;
+            // Console.log ('VideoFlash.onStreamEnded', item);
+            item.paused = true;
+            item.buffering = false;
+            item.onEnded ? item.onEnded(item) : null;
+        }
+        function onStreamError($id) {
+            var item = players[$id.split('embed-').join('').split('object-').join('')];
+            var player = item.player;
+            // Console.log ('VideoFlash.onStreamError', item);
+            item.paused = true;
+            item.buffering = false;
+            item.onError ? item.onError(item) : null;
+        }
+        function onStreamProgress($e) {
+            var item = players[$id.split('embed-').join('').split('object-').join('')];
+            var player = item.player;
+           // Console.log ('VideoFlash.onStreamProgress', item);
+            item.buffer = $e.progress || 0;
+            item.onLoadProgress ? item.onLoadProgress(item) : null;
+        }
+        function onStreamPlaying($e) {
+            var item = players[$id.split('embed-').join('').split('object-').join('')];
+            var player = item.player;
+           // Console.log ('VideoFlash.onStreamPlaying', item);
+             item.paused = false;
+            item.buffering = false;
+            item.onState ? item.onState(item) : null;
+        }
+        function onStreamPaused($e) {
+            var item = players[$id.split('embed-').join('').split('object-').join('')];
+            var player = item.player;
+           // Console.log ('VideoFlash.onStreamPaused', item);
+             item.paused = true;
+            item.buffering = false;
+            item.onState ? item.onState(item) : null;
+        }
+        function onStreamSeeked($e) {
+            var item = players[$id.split('embed-').join('').split('object-').join('')];
+            var player = item.player;
+            // Console.log ('VideoFlash.onStreamSeeked', item);
+            item.onState ? item.onState(item) : null;
+        }
+         /*
+        STREAM.addEventListener(StreamEvent.STARTED, onStreamStarted);
+        STREAM.addEventListener(StreamEvent.END, onStreamEnded);
+        STREAM.addEventListener(StreamEvent.ERROR, onStreamError);
+        STREAM.addEventListener(StreamEvent.PROGRESS, onStreamProgress);
+        STREAM.addEventListener(StreamEvent.PLAYING, onStreamPlaying);
+        STREAM.addEventListener(StreamEvent.PAUSED, onStreamPaused);
+        STREAM.addEventListener(StreamEvent.SEEKED, onStreamSeeked);
+        */
+
         function onVideoLoadStart($e) {
             var player = $($e.target)[0];
             var item = players[player.id];
@@ -516,15 +645,23 @@ var Mediaplayer = function () {
 
         function Load($item) {
             $item.id = 'videoflash-' + count; count++;
+            players[$item.id] = $item;
 
+            var mediaplayerUrl = MEDIAPLAYER_FLASH + '?xxd';
+            var absoluteUrl = $item.source;
+            if (absoluteUrl.indexOf('http') != 0) {
+                absoluteUrl = window.location.protocol + '//' + window.location.host + '/' + absoluteUrl;
+            }
+            // console.log ('absoluteUrl',absoluteUrl);
             var playerTag = Skin.flash({ 
-                video_id: $item.id, 
-                url: $item.source, 
-                loop: ($item.loop || false), 
-                autoplay: ($item.autoplay || false) 
+                'mediaplayerUrl': mediaplayerUrl,
+                'video_id': $item.id, 
+                'url': absoluteUrl, 
+                'loop': ($item.loop || false), 
+                'autoplay': ($item.autoplay || false) 
             });
             playerTag.prependTo($item.mediaplayer);
-            var player = playerTag[0];
+            // var player = playerTag[0];
 
             /*
             function onPlay () {
@@ -558,9 +695,9 @@ var Mediaplayer = function () {
             player.loop = $item.loop || $item.hover;
             player.autoplay = $item.autoplay;
             */
-
+            /*
             $item.player = player;
-            players[player.id] = $item;
+            players[$item.id] = $item;
 
             $item.Play = function () {
                 player.playVideo();
@@ -577,11 +714,20 @@ var Mediaplayer = function () {
             $item.Seek = function ($pow) {
                 player.seekVideo($pow * this.duration);
             };
+            */
             // Console.log ('VideoFlash.Load', $item.id, players);
         }
 
         var VideoFlash = {};
 
+        VideoFlash.onPlayerReady = onPlayerReady;
+        VideoFlash.onStreamStarted = onStreamStarted;
+        VideoFlash.onStreamEnded = onStreamEnded;
+        VideoFlash.onStreamError = onStreamError;
+        VideoFlash.onStreamProgress = onStreamProgress;
+        VideoFlash.onStreamPlaying = onStreamPlaying;
+        VideoFlash.onStreamPaused = onStreamPaused;
+        VideoFlash.onStreamSeeked = onStreamSeeked;
         VideoFlash.Load = Load;
 
         return VideoFlash;
@@ -1314,7 +1460,7 @@ var Mediaplayer = function () {
     }
 
     function supportVideo() {
-        return !!document.createElement('video').canPlayType;
+        return false; // !!document.createElement('video').canPlayType;
     }
     function supportAudio() {
         return !!document.createElement('audio').canPlayType;
@@ -1830,9 +1976,33 @@ var Mediaplayer = function () {
         }
     }
 
-    function Api () {
+    var Api = function () {
         Console.log('Mediaplayer.Api');
-    }
+
+        function Event($event) {
+            var a = Array.prototype.slice.call(arguments, 0);
+            var objectId = a.shift();
+            var eventName = a.shift();
+            var flashTag = $('#' + objectId);
+            console.log (flashTag.size(), VideoFlash, eventName);    
+            if (flashTag.size() === 1) {
+                console.log ('Mediaplayer.Api.Event', eventName, objectId, a);
+                if (VideoFlash[eventName]) {
+                    console.log ('Mediaplayer.Api.Event', objectId, a);
+                    a.unshift(objectId);
+                    VideoFlash[eventName].apply(flashTag[0], a);
+                } else {
+                    console.log ('VideoFlash.eventName', eventName, 'not found');                
+                }
+            }
+        }
+
+        var Api = {};
+
+        Api.Event = Event;
+
+        return Api;
+    }();
 
     var Mediaplayer = {
     };
