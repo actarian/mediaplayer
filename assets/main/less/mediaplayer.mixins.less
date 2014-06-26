@@ -40,3 +40,43 @@ M E D I A P L A Y E R
 	overflow:hidden;
 	.useHardware();
 }
+
+.setAnimation(@prop) {
+	.setAnimation(@prop, 1s);
+}
+.setAnimation(@prop, @time) {
+	.animated(@time);
+	-webkit-animation-name: @prop;
+	-moz-animation-name: @prop;
+	-o-animation-name: @prop;
+	animation-name: @prop;
+}
+body {
+	-webkit-backface-visibility: hidden;
+}
+.animated(@time) {
+	-webkit-animation-duration: @time;
+	   -moz-animation-duration: @time;
+	     -o-animation-duration: @time;
+	        animation-duration: @time;
+	-webkit-animation-fill-mode: both;
+	   -moz-animation-fill-mode: both;
+	     -o-animation-fill-mode: both;
+	        animation-fill-mode: both;
+}
+@-webkit-keyframes roll {
+	0% { -webkit-transform: translateX(0px) rotate(-360deg); }
+	100% { -webkit-transform: translateX(0px) rotate(0deg); }
+}
+@-moz-keyframes roll {
+	0% { -moz-transform: translateX(0px) rotate(-360deg); }
+	100% { -moz-transform: translateX(0px) rotate(0deg); }
+}
+@-o-keyframes roll {
+	0% { -o-transform: translateX(0px) rotate(-360deg); }
+	100% { -o-transform: translateX(0px) rotate(0deg); }
+}
+@keyframes roll {
+	0% { transform: translateX(0px) rotate(-360deg); }
+	100% { transform: translateX(0px) rotate(0deg); }
+}
