@@ -26,7 +26,9 @@ body {
 .mediaplayer > .youtubeplayer, 
 .mediaplayer > .vimeoplayer, 
 .mediaplayer > .html5player, 
-.mediaplayer > .flashplayer {
+.mediaplayer > .flashplayer, 
+.mediaplayer object,
+.mediaplayer embed {
     position: relative;
     display: block;
     width: 100%;
@@ -150,9 +152,11 @@ body {
     &.loading {
         min-height: 100px;
         background: #eeeeee;
+        /*
         > * {
             visibility: hidden;
         }
+        */
         .overlay {
             visibility: visible;            
         }

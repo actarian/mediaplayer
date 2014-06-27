@@ -10,7 +10,7 @@ var Mediaplayer = function () {
 
     var DEBUG               = true, 
         USE_FALLBACK        = true,
-        MEDIAPLAYER_FLASH   = 'swf/mediaplayer.swf',
+        MEDIAPLAYER_FLASH   = 'swf/mediaplayer.swf?popo',
         DEBUG_FLASH         = true,
         UA      = window.navigator.userAgent.toLowerCase(),
         IPHONE  = UA.indexOf('iphone')!=-1,
@@ -187,6 +187,20 @@ var Mediaplayer = function () {
             html += '    <param name="bgcolor" value="#000000" />';
             html += '    <embed src="##mediaplayerUrl##" id="embed-##video_id##" name="embed-##video_id##" flashVars="video=##url##&loop=##loop##&autoplay=##autoplay##" menu="false" quality="high" scale="noscale" wmode="gpu" bgcolor="#000000" swLiveConnect=true allowScriptAccess="sameDomain" type="application/x-shockwave-flash" pluginspage="http://www.adobe.com/go/getflashplayer" />';
             html += '</object>';
+            /*
+            var html = '<object id="object-##video_id##" classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" codebase="http://fpdownload.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=10,0,0,0">';
+            html += '    <param name="flashvars" value="video=##url##&loop=##loop##&autoplay=##autoplay##" />';
+            html += '    <param name="allowScriptAccess" value="sameDomain" />';
+            html += '    <param name="movie" value="##mediaplayerUrl##" />';
+            html += '    <param name="menu" value="false" />';
+            html += '    <param name="quality" value="high" />';
+            html += '    <param name="scale" value="noscale" />';
+            html += '    <param name="salign" value="lt" />';
+            html += '    <param name="wmode" value="gpu" />';
+            html += '    <param name="bgcolor" value="#000000" />';
+            html += '    <embed src="##mediaplayerUrl##" id="embed-##video_id##" name="embed-##video_id##" flashVars="video=##url##&loop=##loop##&autoplay=##autoplay##" menu="false" quality="high" scale="noscale" wmode="gpu" bgcolor="#000000" swLiveConnect=true allowScriptAccess="sameDomain" type="application/x-shockwave-flash" pluginspage="http://www.adobe.com/go/getflashplayer" />';
+            html += '</object>';
+            */
 
             /*
             var html = '<object id="##video_id##" name="##video_id##" classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" type="application/x-shockwave-flash" data="##mediaplayerUrl##">';
@@ -476,13 +490,22 @@ var Mediaplayer = function () {
                     item.Seek = function ($pow) {
                         player.videoSeek($pow * this.duration);
                     };
+                    item.onLoad ? item.onLoad(item) : null;
                 } else {
                     var item = players[id];
                     var player = item.player;
                     if (player) {
                         switch(event) {
+                            case 'onStreamReady':
+                                var mediaInfo = a.shift();
+                                console.log (mediaInfo);
+                                item.videoWidth = mediaInfo.videoWidth;
+                                item.videoHeight = mediaInfo.videoHeight;
+                                item.duration = mediaInfo.duration;
+                                item.onReady ? item.onReady(item) : null;
+                            break;
                             case 'onStreamStarted':
-                                item.onLoad ? item.onLoad(item) : null;
+                                // item.onLoad ? item.onLoad(item) : null;
                             break;
                             case 'onStreamProgress':
                                 item.buffer = $e.progress || 0;
@@ -501,7 +524,7 @@ var Mediaplayer = function () {
                             case 'onStreamSeeked':
                                 item.onState ? item.onState(item) : null;
                             break;
-                            case 'onStreamEnded':
+                            case 'onStreamEnd':
                                 item.paused = true;
                                 item.buffering = false;
                                 item.onEnded ? item.onEnded(item) : null;
@@ -522,7 +545,7 @@ var Mediaplayer = function () {
         function Load($item) {
             $item.id = 'videoflash-' + count; count++;
             players[$item.id] = $item;
-            var mediaplayerUrl = MEDIAPLAYER_FLASH + '?ee';
+            var mediaplayerUrl = MEDIAPLAYER_FLASH;
             var absoluteUrl = $item.source;
             if (absoluteUrl.indexOf('http') != 0) {
                 absoluteUrl = window.location.protocol + '//' + window.location.host + '/' + absoluteUrl;
@@ -534,6 +557,7 @@ var Mediaplayer = function () {
                 'loop': ($item.loop || false), 
                 'autoplay': ($item.autoplay || false) 
             });
+            $item.flash = playerTag;
             playerTag.prependTo($item.mediaplayer);
             Console.log('VideoFlash.Load', $item);
         }
@@ -1414,6 +1438,17 @@ var Mediaplayer = function () {
                     'height': (nh + 240) + 'px',
                     'left': nl + 'px',
                     'top': (nt - 120) + 'px'
+                });
+            } else if (item.flash) {
+                item.flash.css({
+                    'width': nw + 'px',
+                    'height': nh + 'px',
+                    'left': nl + 'px',
+                    'top': nt + 'px'
+                });
+                item.flash.find('*').css({
+                    'width': nw + 'px',
+                    'height': nh + 'px'
                 });
             } else if (item.player) {
                 item.player.width = nw;
