@@ -8,9 +8,9 @@ var Mediaplayer = function () {
     S U B C L A S S E S 
     ********************************/
 
-    var DEBUG               = true, 
+    var DEBUG               = false, 
         USE_FALLBACK        = true,
-        MEDIAPLAYER_FLASH   = 'swf/mediaplayer.swf?popo',
+        MEDIAPLAYER_FLASH   = 'swf/mediaplayer.swf?aag',
         DEBUG_FLASH         = true,
         UA      = window.navigator.userAgent.toLowerCase(),
         IPHONE  = UA.indexOf('iphone')!=-1,
@@ -176,7 +176,7 @@ var Mediaplayer = function () {
         };
         Skin.flash = function ($data) {
             var html = '<object id="object-##video_id##" classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" codebase="http://fpdownload.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=10,0,0,0">';
-            html += '    <param name="flashvars" value="video=##url##&loop=##loop##&autoplay=##autoplay##" />';
+            html += '    <param name="flashvars" value="video=##url##&loop=##loop##&autoplay=##autoplay##&crop=##crop##" />';
             html += '    <param name="allowScriptAccess" value="sameDomain" />';
             html += '    <param name="movie" value="##mediaplayerUrl##" />';
             html += '    <param name="menu" value="false" />';
@@ -185,7 +185,7 @@ var Mediaplayer = function () {
             html += '    <param name="salign" value="lt" />';
             html += '    <param name="wmode" value="gpu" />';
             html += '    <param name="bgcolor" value="#000000" />';
-            html += '    <embed src="##mediaplayerUrl##" id="embed-##video_id##" name="embed-##video_id##" flashVars="video=##url##&loop=##loop##&autoplay=##autoplay##" menu="false" quality="high" scale="noscale" wmode="gpu" bgcolor="#000000" swLiveConnect=true allowScriptAccess="sameDomain" type="application/x-shockwave-flash" pluginspage="http://www.adobe.com/go/getflashplayer" />';
+            html += '    <embed src="##mediaplayerUrl##" id="embed-##video_id##" name="embed-##video_id##" flashVars="video=##url##&loop=##loop##&autoplay=##autoplay##&crop=##crop##" menu="false" quality="high" scale="noscale" wmode="gpu" bgcolor="#000000" swLiveConnect=true allowScriptAccess="sameDomain" type="application/x-shockwave-flash" pluginspage="http://www.adobe.com/go/getflashplayer" />';
             html += '</object>';
             /*
             var html = '<object id="object-##video_id##" classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" codebase="http://fpdownload.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=10,0,0,0">';
@@ -469,13 +469,12 @@ var Mediaplayer = function () {
             var object = $('#' + id);
             id = id.split('embed-').join('').split('object-').join('');
             if (object.size() === 1) {
-                console.log ('VideoFlash.Event', event, id, a);
+                Console.log ('VideoFlash.Event', event, id, a);
                 if (event == 'onPlayerReady') {
                     var player = object[0];
                     var item = players[id];
                     item.player = player;
                     item.Play = function () {
-                        console.log ('VideoFlash.item.Play', item);
                         player.videoPlay();
                     };
                     item.Stop = function () {
@@ -498,11 +497,26 @@ var Mediaplayer = function () {
                         switch(event) {
                             case 'onStreamReady':
                                 var mediaInfo = a.shift();
-                                console.log (mediaInfo);
+                                Console.log (mediaInfo);
                                 item.videoWidth = mediaInfo.videoWidth;
                                 item.videoHeight = mediaInfo.videoHeight;
                                 item.duration = mediaInfo.duration;
                                 item.onReady ? item.onReady(item) : null;
+                            break;
+                            case 'onStreamInfo':
+                                var mediaInfo = a.shift();
+                                Console.log (mediaInfo);
+                                item.videoWidth = mediaInfo.videoWidth;
+                                item.videoHeight = mediaInfo.videoHeight;
+                                item.duration = mediaInfo.duration;
+                                if (item.progress != mediaInfo.progress) {
+                                    item.progress = mediaInfo.progress;
+                                    item.onPlayProgress ? item.onPlayProgress (item) : null;
+                                } 
+                                if (item.buffer != mediaInfo.buffer) {
+                                    item.buffer = mediaInfo.buffer;
+                                    item.onLoadProgress ? item.onLoadProgress (item) : null;
+                                }
                             break;
                             case 'onStreamStarted':
                                 // item.onLoad ? item.onLoad(item) : null;
@@ -535,7 +549,7 @@ var Mediaplayer = function () {
                                 item.onError ? item.onError(item) : null;
                             break;
                             default :
-                                console.log ('VideoFlash.Event', event, 'not found');                
+                                Console.log ('VideoFlash.Event', event, 'not found');                
                             break;
                         }
                     }
@@ -555,7 +569,8 @@ var Mediaplayer = function () {
                 'video_id': $item.id, 
                 'url': absoluteUrl, 
                 'loop': ($item.loop || false), 
-                'autoplay': ($item.autoplay || false) 
+                'autoplay': ($item.autoplay || false), 
+                'crop': ($item.crop || false)
             });
             $item.flash = playerTag;
             playerTag.prependTo($item.mediaplayer);
@@ -791,6 +806,17 @@ var Mediaplayer = function () {
             if (READY) {
                 Callbacks();
             }
+            $.ajax({
+                type: 'GET',
+                url: ' https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=' + $item.youtube + '&key=AIzaSyDuTLvoZeZis5kF1tILusJsAuQc11e_gtE',
+                dataType: 'json',
+                success: function ($data) {
+                    console.log ('VideoYoutube.Load Api', $data);
+                },
+                error: function (xhr) {
+                    console.log ('VideoYoutube.Load Error', xhr);
+                }
+            });
         }
 
         function Callbacks() {
@@ -1230,6 +1256,7 @@ var Mediaplayer = function () {
         item.fallback = item.fallback !== undefined ? true : false;
         item.autoplay = item.autoplay !== undefined ? true : false;
         item.loop = item.loop !== undefined ? true : false;
+        item.crop = item.crop !== undefined ? true : false;
 
         if (item.overlay !== 'false') {
             var overlay = Skin.overlay();
@@ -1353,7 +1380,7 @@ var Mediaplayer = function () {
             } else {
                 ir = pr;
             }
-            var nw, nh, nl, nt, pw, ph, pl, pt, d = 2;
+            var aw, ah, al, at, nw, nh, nl, nt, pw, ph, pl, pt, d = 2;
             // CROP
             if (item.crop) {
                 if (item.circle || item.square) {
@@ -1361,7 +1388,11 @@ var Mediaplayer = function () {
                     vr = 1;
                     item.mediaplayer.height(Math.round(vh));
                 }
-                // console.log(vw,vh,ir,vr);
+                // console.log(vw,vh,ir,vr);                
+                aw = vw + d;
+                ah = vh + d;
+                al = - d / 2;
+                at = - d / 2;
                 if (ir > vr) {
                     nh = vh + d;
                     nw = nh * ir;
@@ -1380,11 +1411,11 @@ var Mediaplayer = function () {
                 }
                 pl = (vw - pw) / 2;
                 pt = (vh - ph) / 2;
-            } else {
-                nw = vw + d;
-                nh = vw / ir;
-                nl = - d / 2;
-                nt = - d / 2;
+            } else {                
+                aw = nw = vw + d;
+                ah = nh = vw / ir;
+                al = nl = - d / 2;
+                at = nt = - d / 2;
                 /*
                 if (item.vimeo || item.youtube) {
                     item.mediaplayer.height(Math.round(nh));
@@ -1441,14 +1472,14 @@ var Mediaplayer = function () {
                 });
             } else if (item.flash) {
                 item.flash.css({
-                    'width': nw + 'px',
-                    'height': nh + 'px',
-                    'left': nl + 'px',
-                    'top': nt + 'px'
+                    'width': aw + 'px',
+                    'height': ah + 'px',
+                    'left': al + 'px',
+                    'top': at + 'px'
                 });
                 item.flash.find('*').css({
-                    'width': nw + 'px',
-                    'height': nh + 'px'
+                    'width': aw + 'px',
+                    'height': ah + 'px'
                 });
             } else if (item.player) {
                 item.player.width = nw;
@@ -1830,9 +1861,18 @@ var Mediaplayer = function () {
             VideoFlash.Event.apply( this, arguments );
         }
 
+        function Log($func, $params) {
+            var params = '';
+            for (var p in $params) {
+                params += p + ': ' + $params[p] + ' ';
+            }
+            Console.log ($func, params);
+        }
+
         var Api = {};
 
         Api.Event = Event;
+        Api.Log = Log;
 
         return Api;
     }();
