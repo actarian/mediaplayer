@@ -592,7 +592,7 @@ var Mediaplayer = function () {
 
     var VideoYoutube = function () {
 
-        var INIT = false, READY = false, callbacks = [], players = {};
+        var INIT = false, READY = false, callbacks = [], players = {}, count = 0;
 
         function Init() {
             // Console.log ('VideoYoutube.Init');
@@ -609,40 +609,18 @@ var Mediaplayer = function () {
         function onPlayerReady($e) {
             var player = $e.target;
             var item = players[player.id];
-
-            // Console.log ('VideoYoutube.onPlayerReady', player);
-            // Console.log ('VideoYoutube.onPlayerReady', 'item.id', item.id);
-            // Console.log ('VideoYoutube.onPlayerReady.getVideoData', player.width, player.height);
-            // player.playVideo();
-            // player.stopVideo();
-            
-            item.videoWidth = player.width;
-            item.videoHeight = player.height;
+            var iframe = $(player.getIframe());
+            item.videoWidth = parseInt(iframe.attr('width'));
+            item.videoHeight = parseInt(iframe.attr('height'));
             item.duration = player.getDuration();
-
-            var videoData = player.getVideoData ();
+            var videoData = player.getVideoData();
             if (videoData.video_id != null) {
                 item.videoData = videoData;
                 item.onReady ? item.onReady(item) : null;
-                // Console.log('VideoYoutube.onPlayerReady', videoData);
+                Console.log('VideoYoutube.onPlayerReady', item);
             } else {
                 item.onError ? item.onError(item) : null;
-            }
-
-            /*
-            $.ajax({
-                dataType: "json",
-                method: 'GET',
-                url: 'http://www.youtube.com/oembed?url=http%3A//www.youtube.com/watch?v%3D'+item.youtube+'&format=json',
-                success: function($json) {
-                    // Console.log ('VideoYoutube.onPlayerReady', $json);
-                    item.videoWidth = $json.width;
-                    item.videoHeight = $json.height;            
-                    item.onReady ? item.onReady(item) : null;
-                }
-            });         
-            */
-
+            }      
         }
         function updateProgress(player, item) {         
             var buffer = player.getVideoLoadedFraction();
@@ -798,7 +776,7 @@ var Mediaplayer = function () {
         }
 
         function Load($item) {
-            $item.id = 'youtube-' + $item.youtube;
+            $item.id = 'youtube-' + count + '-' + $item.youtube; count++;
             $('<div id="' + $item.id + '" class="youtubeplayer"></div>').prependTo($item.mediaplayer);
             // Console.log ('VideoYoutube.Load', $item.id);
             Init();
@@ -806,6 +784,7 @@ var Mediaplayer = function () {
             if (READY) {
                 Callbacks();
             }
+            /*
             $.ajax({
                 type: 'GET',
                 url: ' https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=' + $item.youtube + '&key=AIzaSyDuTLvoZeZis5kF1tILusJsAuQc11e_gtE',
@@ -817,6 +796,7 @@ var Mediaplayer = function () {
                     console.log ('VideoYoutube.Load Error', xhr);
                 }
             });
+            */
         }
 
         function Callbacks() {
@@ -849,7 +829,7 @@ var Mediaplayer = function () {
 
     var VideoVimeo = function () {
 
-        var INIT = false, READY = false, callbacks = [], players = {};
+        var INIT = false, READY = false, callbacks = [], players = {}, count = 0;
 
         function Init() {
             // Console.log ('VideoVimeo.Init');
@@ -868,7 +848,6 @@ var Mediaplayer = function () {
             READY = true;
             Callbacks();
         }
-
         function onPlayerReady($e) {
             var player = $e.target;
             var item = players[player.id];
@@ -876,10 +855,8 @@ var Mediaplayer = function () {
             // Console.log ('VideoVimeo.onPlayerReady', 'item.id', item.id);
             // Console.log ('VideoVimeo.onPlayerReady.getVideoData', player.width, player.height);
             // player.playVideo();
-            // player.stopVideo();
-            
+            // player.stopVideo();            
             // Console.log('VideoVimeo.onPlayerReady', player.api);
-
             player.api('getVideoWidth', function ($val, $id) {
                 item.videoWidth = parseInt($val, 10);
                 player.api('getVideoHeight', function ($val, $id) {
@@ -897,7 +874,6 @@ var Mediaplayer = function () {
                     }); 
                 });
             });
-
         }
         /*
         function onPlayerPlaybackQualityChange ($e) {
@@ -931,7 +907,6 @@ var Mediaplayer = function () {
             }
         }
         */
-
         function onLoadProgress($e) {
             // Console.log ('VideoVimeo.onLoadProgress', arguments);    
             var player = $e.target;
@@ -993,7 +968,6 @@ var Mediaplayer = function () {
             // Console.log ('VideoVimeo.onIframeError', $item);    
             $item.onError ? $item.onError($item) : null;
         }
-
         function Create($item) {
             // Console.log ('VideoVimeo.Create', $item.id);
             // 'M7lc1UVf-VE'
@@ -1106,7 +1080,7 @@ var Mediaplayer = function () {
         }
 
         function Load($item) {
-            $item.id = 'vimeo-' + $item.vimeo;
+            $item.id = 'vimeo-' + count + '-' + $item.vimeo; count++;
             // $('<div id="'+ $item.id +'" class="vimeoplayer"></div>').prependTo($item.mediaplayer);
             // Console.log('VideoVimeo.Load', $item.id);
             Init();
@@ -1252,12 +1226,11 @@ var Mediaplayer = function () {
         items.push(item);
         mediaplayers[id] = item;
         
-        item.controls = item.controls !== undefined ? true : false;
-        item.fallback = item.fallback !== undefined ? true : false;
-        item.autoplay = item.autoplay !== undefined ? true : false;
-        item.loop = item.loop !== undefined ? true : false;
-        item.crop = item.crop !== undefined ? true : false;
-
+        item.controls =     item.controls && item.controls !== undefined ? true : false;
+        item.fallback =     item.fallback && item.fallback !== undefined ? true : false;
+        item.autoplay =     item.autoplay && item.autoplay !== undefined ? true : false;
+        item.loop =         item.loop && item.loop !== undefined ? true : false;
+        
         if (item.overlay !== 'false') {
             var overlay = Skin.overlay();
             overlay.appendTo(mediaplayer);
@@ -1366,22 +1339,24 @@ var Mediaplayer = function () {
         // var ww = win.width();
         // var wh = win.height();
         function resizeItem(item) {
-            var vw = item.mediaplayer.width();
-            var vh = item.mediaplayer.height();
-            var vr = vw / vh;
-            var ir = 16 / 9;
-            var pr = ir;
-            // Console.log('Mediaplayer.resizeItem', item.posterWidth, item.videoWidth);
+            var vw, vh, vr, ir, pr;
+            var aw, ah, al, at, nw, nh, nl, nt, pw, ph, pl, pt, d = 2;
+            vw = item.mediaplayer.width();
+            vh = item.mediaplayer.height();
+            vr = vw / vh;
+            ir = 16 / 9;
+            pr = ir;
             if (item.posterWidth) {
                 pr = item.posterWidth / item.posterHeight;
             }
             if (item.videoWidth) {
                 ir = item.videoWidth / item.videoHeight;
             } else {
+                return; // !! ATTENTION
                 ir = pr;
             }
-            var aw, ah, al, at, nw, nh, nl, nt, pw, ph, pl, pt, d = 2;
             // CROP
+            console.log (item.id, 'item.crop', item.crop);
             if (item.crop) {
                 if (item.circle || item.square) {
                     vh = vw;
@@ -1412,10 +1387,14 @@ var Mediaplayer = function () {
                 pl = (vw - pw) / 2;
                 pt = (vh - ph) / 2;
             } else {                
-                aw = nw = vw + d;
-                ah = nh = vw / ir;
-                al = nl = - d / 2;
-                at = nt = - d / 2;
+                nw = vw + d;
+                nh = vw / ir;
+                nl = - d / 2;
+                nt = - d / 2;                
+                aw = nw;
+                ah = nh;
+                al = nl;
+                at = nt;
                 /*
                 if (item.vimeo || item.youtube) {
                     item.mediaplayer.height(Math.round(nh));
@@ -1433,6 +1412,10 @@ var Mediaplayer = function () {
                     item.mediaplayer.height(Math.round(ph));
                 }
             }
+            aw = Math.round(aw);
+            ah = Math.round(ah);
+            al = Math.round(al);
+            at = Math.round(at);
             nw = Math.round(nw);
             nh = Math.round(nh);
             nl = Math.round(nl);
@@ -1444,20 +1427,22 @@ var Mediaplayer = function () {
             var iframe;
             if (item.poster) {
                 item.poster.css({
-                    'width': pw + 'px',
-                    'height': ph + 'px',
-                    'left': pl + 'px',
-                    'top': pt + 'px'
+                    'width':    pw + 'px',
+                    'height':   ph + 'px',
+                    'left':     pl + 'px',
+                    'top':      pt + 'px'
                 });
             }
             if (item.vimeo) {
                 iframe = item.mediaplayer.find('iframe');
                 iframe.css({
-                    'width': nw + 'px',
-                    'height': (nh + 120) + 'px',
-                    'left': nl + 'px',
-                    'top': (nt - 60) + 'px'
+                    'width':    nw + 'px',
+                    'height':   (nh + 120) + 'px',
+                    'left':     nl + 'px',
+                    'top':      (nt - 60) + 'px'
                 });
+                Console.log('Mediaplayer.Resize.resizeItem.vimeo', item.videoWidth, item.videoHeight);
+           
             } else if (item.youtube) {
                 if (item.player) {
                     item.player.width = nw;
@@ -1465,31 +1450,37 @@ var Mediaplayer = function () {
                 }
                 iframe = item.mediaplayer.find('iframe');
                 iframe.css({
-                    'width': nw + 'px',
-                    'height': (nh + 240) + 'px',
-                    'left': nl + 'px',
-                    'top': (nt - 120) + 'px'
+                    'width':    nw + 'px',
+                    'height':   (nh + 240) + 'px',
+                    'left':     nl + 'px',
+                    'top':      (nt - 120) + 'px'
                 });
+                Console.log('Mediaplayer.Resize.resizeItem.youtube', item.videoWidth, item.videoHeight);
+           
             } else if (item.flash) {
                 item.flash.css({
-                    'width': aw + 'px',
-                    'height': ah + 'px',
-                    'left': al + 'px',
-                    'top': at + 'px'
+                    'width':    aw + 'px',
+                    'height':   ah + 'px',
+                    'left':     al + 'px',
+                    'top':      at + 'px'
                 });
                 item.flash.find('*').css({
-                    'width': aw + 'px',
-                    'height': ah + 'px'
+                    'width':    aw + 'px',
+                    'height':   ah + 'px'
                 });
+                Console.log('Mediaplayer.Resize.resizeItem.flash', item.videoWidth, item.videoHeight);
+           
             } else if (item.player) {
                 item.player.width = nw;
                 item.player.height = nh;
                 $(item.player).css({
-                    'width': nw + 'px',
-                    'height': nh + 'px',
-                    'left': nl + 'px',
-                    'top': nt + 'px'
+                    'width':    nw + 'px',
+                    'height':   nh + 'px',
+                    'left':     nl + 'px',
+                    'top':      nt + 'px'
                 });
+                Console.log('Mediaplayer.Resize.resizeItem.html5', item.videoWidth, item.videoHeight);
+           
             }
             // Console.log ('Mediaplayer.Resize', nw, nh);  
         }
@@ -1497,7 +1488,7 @@ var Mediaplayer = function () {
             return resizeItem($item);
         }
         $.each(items, function (i, item) {
-            resizeItem(item);          
+            resizeItem(item);                  
         });
     }
 
