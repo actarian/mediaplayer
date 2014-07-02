@@ -11,7 +11,7 @@ var Mediaplayer = function () {
     var DEBUG               = false, 
         USE_FALLBACK        = true,
         MEDIAPLAYER_FLASH   = 'swf/mediaplayer.swf?aag',
-        DEBUG_FLASH         = true,
+        DEBUG_FLASH         = false,
         UA      = window.navigator.userAgent.toLowerCase(),
         IPHONE  = UA.indexOf('iphone')!=-1,
         IPOD    = UA.indexOf('ipod')!=-1,
@@ -1226,10 +1226,10 @@ var Mediaplayer = function () {
         items.push(item);
         mediaplayers[id] = item;
         
-        item.controls =     item.controls && item.controls !== undefined ? true : false;
-        item.fallback =     item.fallback && item.fallback !== undefined ? true : false;
-        item.autoplay =     item.autoplay && item.autoplay !== undefined ? true : false;
-        item.loop =         item.loop && item.loop !== undefined ? true : false;
+        item.controls =     item.controls !== undefined ? true : false;
+        item.fallback =     item.fallback !== undefined ? true : false;
+        item.autoplay =     item.autoplay !== undefined ? true : false;
+        item.loop =         item.loop !== undefined ? true : false;
         
         if (item.overlay !== 'false') {
             var overlay = Skin.overlay();
@@ -1352,7 +1352,6 @@ var Mediaplayer = function () {
             if (item.videoWidth) {
                 ir = item.videoWidth / item.videoHeight;
             } else {
-                return; // !! ATTENTION
                 ir = pr;
             }
             // CROP
