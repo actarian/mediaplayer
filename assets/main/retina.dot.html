@@ -1,0 +1,77 @@
+{
+  "template":       "master",
+  "title":          "Websolute",
+  "description":    "Homepage",
+  "class":          "home",
+  "id":             0
+}
+
+
+<style>
+
+  [data-2x] {
+    background-size: cover;
+  }
+  img {
+    max-width: 100%;
+  }
+  .img-1x {
+    display: inherit;
+  }
+  .img-2x {
+    display: none;
+  }
+  @media
+    only screen and (-webkit-min-device-pixel-ratio: 2),
+    only screen and (   min--moz-device-pixel-ratio: 2),
+    only screen and (     -o-min-device-pixel-ratio: 2/1),
+    only screen and (        min-device-pixel-ratio: 2),
+    only screen and (                min-resolution: 192dpi),
+    only screen and (                min-resolution: 2dppx) { 
+    .img-1x {
+      display: none;
+    }
+    .img-2x {
+      display: inherit;
+    }
+  }
+
+</style>
+
+      <section id="why-use-boilerplate">
+        <div class="container">
+          <div class="row">
+            <div class="col-sm-6 col-md-4">
+              <img src="http://placehold.it/640x320&text=no-retina 640" data-2x="http://placehold.it/1280x640&text=retina 1280">
+            </div>            
+            <div class="col-sm-6 col-md-4">
+              <img src="http://placehold.it/640x320&text=no-retina 640" data-2x="http://placehold.it/1280x640&text=retina 1280">
+            </div>
+            <div class="col-sm-6 col-md-4">              
+              <div style="background-image: url('http://placehold.it/640x320&text=no-retina 640');" data-2x="http://placehold.it/1280x640&text=retina 1280"></div>
+            </div>
+            <div class="col-sm-6 col-md-4">
+              <!--
+              <img src="http://placehold.it/640x320&text=no-retina 640" class="img-1x">
+              <img src="http://placehold.it/1280x640&text=retina 1280" class="img-2x">
+              -->
+            </div>  
+          </div>  
+        </div>
+      </section>
+
+  <script>
+
+    if (window.devicePixelRatio >= 1.2) {
+      var elems = document.getElementsByTagName('*');
+      for(var i=0;i < elems.length;i++){
+          var attr = elems[i].getAttribute('data-2x');
+          if(attr && elems[i].tagName == 'IMG'){
+              elems[i].src = attr;
+          } else if(attr){
+              elems[i].style.cssText += 'background-image: url('+attr+')';
+          }
+      }
+    }
+
+  </script>

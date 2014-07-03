@@ -157,6 +157,11 @@ body {
             visibility: hidden;
         }
         */
+        iframe,
+        object,
+        embed {
+            visibility: hidden;
+        }
         .overlay {
             visibility: visible;            
         }
@@ -308,6 +313,12 @@ body {
     }
     &.error .btn-play {
         display: block;
+    }
+    &.background {
+        border-radius: 0;
+        .btn-play {
+            display: none;
+        }
     }
 }
 

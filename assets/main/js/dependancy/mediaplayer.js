@@ -12,6 +12,7 @@ var Mediaplayer = function () {
         USE_FALLBACK        = true,
         MEDIAPLAYER_FLASH   = 'swf/mediaplayer.swf?aag',
         DEBUG_FLASH         = false,
+        CATCH_IFRAMES       = true,
         UA      = window.navigator.userAgent.toLowerCase(),
         IPHONE  = UA.indexOf('iphone')!=-1,
         IPOD    = UA.indexOf('ipod')!=-1,
@@ -1210,6 +1211,7 @@ var Mediaplayer = function () {
             square: mediaplayer.hasClass('square'),
             circle: mediaplayer.hasClass('circle'),
             hover: mediaplayer.hasClass('hover'),
+            background: mediaplayer.hasClass('background'),
             mediaplayer: mediaplayer,
             paused: true,
             callback: $callback
@@ -1293,6 +1295,25 @@ var Mediaplayer = function () {
         $(".mediaplayer[data-init!='true']").each(function () {
             InitMediaplayer.call(this);
         });
+        if (CATCH_IFRAMES) {
+            $("iframe[src*='player.vimeo.com'], iframe[src*='www.youtube.com']").each(function () {
+                if ($(this).closest('.mediaplayer').size() == 0) {
+                    var src = $(this).attr('src');
+                    var videoId = src.split('/').pop().split('?')[0];
+                    var videoType = 'unknown';
+                    if (src.indexOf('youtube') != -1) {
+                        videoType = 'youtube';
+                    } else if (src.indexOf('vimeo') != -1) {
+                        videoType = 'vimeo';
+                    }
+                    if (videoType != 'unknown') {
+                        var mediaplayer = $('<div class="mediaplayer" '+videoType+'="'+videoId+'" controls></div>').insertAfter($(this));
+                        $(this).remove();
+                        InitMediaplayer.call(mediaplayer[0]);
+                    }                    
+                }                
+            });
+        }
     }
 
     function supportVideo() {
@@ -1732,6 +1753,7 @@ var Mediaplayer = function () {
                     case 'circle':
                     case 'crop':
                     case 'hover':
+                    case 'background':
                         qso[$v] = 'true';
                     break;
                 }
@@ -1766,6 +1788,7 @@ var Mediaplayer = function () {
                     case 'square':
                     case 'crop':
                     case 'hover':
+                    case 'background':
                         qso[p] === 'true' ? mediaplayer.addClass(p) : null;
                     break;
                     default:
@@ -1812,6 +1835,7 @@ var Mediaplayer = function () {
                             case 'square':
                             case 'crop':
                             case 'hover':
+                            case 'background':
                                 if (query[p] === 'true') {
                                     mediaplayer.addClass(p);
                                 }
