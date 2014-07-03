@@ -11,6 +11,7 @@
 
   [data-2x] {
     background-size: cover;
+    background-position: center;
   }
   img {
     max-width: 100%;
@@ -48,13 +49,11 @@
               <img src="http://placehold.it/640x320&text=no-retina 640" data-2x="http://placehold.it/1280x640&text=retina 1280">
             </div>
             <div class="col-sm-6 col-md-4">              
-              <div style="background-image: url('http://placehold.it/640x320&text=no-retina 640');" data-2x="http://placehold.it/1280x640&text=retina 1280"></div>
+              <div style="background-image: url('http://placehold.it/640x320&text=no-retina 640'); height:320px;" data-2x="http://placehold.it/1280x640&text=retina 1280"></div>
             </div>
             <div class="col-sm-6 col-md-4">
-              <!--
               <img src="http://placehold.it/640x320&text=no-retina 640" class="img-1x">
               <img src="http://placehold.it/1280x640&text=retina 1280" class="img-2x">
-              -->
             </div>  
           </div>  
         </div>
@@ -69,7 +68,8 @@
           if(attr && elems[i].tagName == 'IMG'){
               elems[i].src = attr;
           } else if(attr){
-              elems[i].style.cssText += 'background-image: url('+attr+')';
+              elems[i].style.backgroundImage = 'url("'+attr+'"")';
+              alert('background '+attr);
           }
       }
     }
